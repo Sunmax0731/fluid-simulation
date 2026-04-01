@@ -1,0 +1,17 @@
+{
+  "name": "fluid-simulation",
+  "version": "1.0.0",
+  "description": "Realtime fluid-inspired visual demos for waves, smoke, fire, and stylized ink.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

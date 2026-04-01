@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ink Flow</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <div class="headline">
+    <strong>Ink Flow</strong>
+    <span>3D liquid basin for glossy pigment sheets, refractive edges, and realtime splash control</span>
+  </div>
+
+  <a id="back" href="../">&lt;- Back to gallery</a>
+  <div id="leftDock">
+    <div class="dockGroup">
+      <div class="dockLabel">Scenes</div>
+      <div id="scenes">
+        <button data-scene="sheet">Sheet</button>
+        <button data-scene="drop">Drop</button>
+        <button data-scene="bubble">Bubble</button>
+      </div>
+    </div>
+
+    <div class="dockGroup">
+      <div class="dockLabel">Palette</div>
+      <div id="palette"></div>
+    </div>
+
+    <div class="dockGroup">
+      <div class="dockLabel">Actions</div>
+      <div id="actions">
+        <button id="toolToggle">Tool: Paint</button>
+        <button id="viewToggle">View: Ink</button>
+        <button id="resetButton">Reset Scene</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="info">
+    Left drag paints fluid. Right drag orbits the camera. Wheel zooms. Keys: <strong>1 / 2 / 3</strong> scene, <strong>B</strong> bubble tool, <strong>V</strong> velocity view, <strong>R</strong> reset. Use the right panel for thickness, refraction, fresnel, and caustics.
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

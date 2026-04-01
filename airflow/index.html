@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ocean Surface</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <div class="headline">
+    <strong>Ocean Surface</strong>
+    <span>3D tank-style water surface with wall reflections, impact ripples, and orbit camera control</span>
+  </div>
+
+  <a id="back" href="../">&lt;- Back to gallery</a>
+
+  <div id="leftDock">
+    <div class="dockGroup">
+      <div class="dockLabel">Presets</div>
+      <div id="presets">
+        <button data-preset="nagi">Nagi</button>
+        <button data-preset="glass">Glass</button>
+        <button data-preset="swell">Swell</button>
+        <button data-preset="storm">Storm</button>
+        <button data-preset="sunset">Sunset</button>
+      </div>
+    </div>
+
+    <div class="dockGroup">
+      <div class="dockLabel">Actions</div>
+      <div id="actions">
+        <button data-drop="droplet">Water Drop</button>
+        <button data-drop="sphere">Metal Sphere</button>
+        <button data-drop="crate">Crate</button>
+        <button data-drop="clear">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="info">
+    Drag to orbit, wheel to zoom. Use Nagi for still water inside the tank, then trigger Water Drop, Metal Sphere, or Crate to inspect wall reflections. Keys: <strong>1 - 5</strong> presets, <strong>Q / W / E</strong> drop actions, <strong>R</strong> clear impacts.
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

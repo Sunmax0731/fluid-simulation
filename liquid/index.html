@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smoke &amp; Fire</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <div class="headline">
+    <strong>Smoke &amp; Fire</strong>
+    <span>3D plume presentation for campfire, mist, and thruster-style realtime FX</span>
+  </div>
+
+  <a id="back" href="../">&lt;- Back to gallery</a>
+  <div id="leftDock">
+    <div class="dockGroup">
+      <div class="dockLabel">Looks</div>
+      <div id="looks">
+        <button data-look="campfire">Campfire</button>
+        <button data-look="mist">Mist</button>
+        <button data-look="thruster">Thruster</button>
+      </div>
+    </div>
+
+    <div class="dockGroup">
+      <div class="dockLabel">Current</div>
+      <div id="status">Look: <span id="lookName">Campfire</span></div>
+    </div>
+  </div>
+
+  <div id="info">
+    Left drag injects plumes. Right drag orbits the camera. Wheel zooms. Keys: <strong>1 / 2 / 3</strong> switch looks, <strong>R</strong> resets.
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

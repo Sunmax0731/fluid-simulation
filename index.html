@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fluid Motion Lab</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <span class="eyebrow">Realtime Visual FX Playground</span>
+      <h1>Fluid Motion Lab</h1>
+      <p>
+        ゲームやモーショングラフィックス向けの流体表現を、ブラウザ上ですぐに試せる WebGL デモ集です。
+        水槽内の水面、3D ボリュームの煙と炎、屈折や反射を伴うインク膜をリアルタイムに操作しながら、プリセットと詳細パラメータで見た目を調整できます。
+      </p>
+      <div class="hero-meta">
+        <div class="badge" id="gpuBadge">GPU capability: checking...</div>
+        <div class="badge secondary">WebGL2 / Three.js / Vite</div>
+        <div class="badge secondary">Interactive presets and live controls</div>
+      </div>
+    </section>
+
+    <section class="cards">
+      <a class="card ocean" href="./airflow/">
+        <div class="card-top">
+          <span class="tag">Wave Surface</span>
+          <span class="index">01</span>
+        </div>
+        <div>
+          <h2>Ocean Surface</h2>
+          <p>
+            壁に囲まれた水槽内の水面を 3D で表示するデモです。静かな凪の状態からうねりのある波面まで切り替えられ、
+            落下物の着水、水しぶき、水膜シート、壁で反射して戻る波まで確認できます。
+          </p>
+        </div>
+        <ul>
+          <li>凪から荒れた水面まで切り替えられるプリセット</li>
+          <li>水滴、金属球、木箱の落下による衝突演出</li>
+          <li>透明な水槽表現、壁反射、水しぶきと二次波紋</li>
+        </ul>
+        <span class="cta">Open Demo -></span>
+      </a>
+
+      <a class="card smoke" href="./liquid/">
+        <div class="card-top">
+          <span class="tag">Smoke and Fire</span>
+          <span class="index">02</span>
+        </div>
+        <div>
+          <h2>Smoke &amp; Fire</h2>
+          <p>
+            3D の密度グリッドを立体的に描画する、煙と炎のデモです。たき火、霧、噴射炎の三つの表現を切り替えられ、
+            それぞれで色の移り変わり、広がり方、発光の見え方が変わります。クリックした位置に、その場で煙や炎を注ぎ込めます。
+          </p>
+        </div>
+        <ul>
+          <li>たき火、霧、噴射炎の三つの表現を切替</li>
+          <li>立体的な煙の描画と、表現ごとに異なる色や拡散の挙動</li>
+          <li>クリックによる注入、自己陰影、発光量や濃度の調整</li>
+        </ul>
+        <span class="cta">Open Demo -></span>
+      </a>
+
+      <a class="card ink" href="./multiphase/">
+        <div class="card-top">
+          <span class="tag">Stylized Liquid</span>
+          <span class="index">03</span>
+        </div>
+        <div>
+          <h2>Ink Flow</h2>
+          <p>
+            ガラス槽の中でインクの膜が広がる様子を、3D の液体表現として見せるデモです。光の吸収、屈折、視線角による反射、
+            底面に落ちる集光模様を加えることで、艶のある質感に整えています。面状の広がり、滴下、気泡の三つの場面を操作できます。
+          </p>
+        </div>
+        <ul>
+          <li>面状の広がり、滴下、気泡の三つの場面を切替</li>
+          <li>ペイントと気泡をくり抜く操作の両方に対応</li>
+          <li>厚み、屈折、吸収、集光模様、速度表示の調整</li>
+        </ul>
+        <span class="cta">Open Demo -></span>
+      </a>
+    </section>
+
+    <section class="notes">
+      <p><strong>使い方:</strong> 各デモを開き、左側のプリセットやツールを切り替えながら、右側のパラメータパネルで見た目を調整してください。</p>
+      <p><strong>用途:</strong> ゲーム背景、水面演出、煙や炎の効果、モーショングラフィックス、VJ 向けのリアルタイム可視化を想定しています。</p>
+      <p><strong>方針:</strong> 物理的な厳密さよりも、リアルタイムで触りながら画づくりしやすいことを重視し、ソルバーと描画を用途に合わせて調整しています。</p>
+    </section>
+  </main>
+
+  <script>
+    const badge = document.getElementById('gpuBadge');
+
+    async function updateBadge() {
+      if ('gpu' in navigator) {
+        try {
+          const adapter = await navigator.gpu.requestAdapter();
+          if (adapter) {
+            badge.textContent = 'GPU capability: WebGPU available';
+            badge.style.color = '#9effc5';
+            badge.style.borderColor = 'rgba(115, 255, 180, 0.24)';
+            return;
+          }
+        } catch (error) {
+          console.warn(error);
+        }
+      }
+
+      badge.textContent = 'GPU capability: WebGL2 fallback';
+      badge.style.color = '#ffd3a4';
+      badge.style.borderColor = 'rgba(255, 157, 92, 0.24)';
+    }
+
+    updateBadge();
+  </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+
+.vite-dev.out.log
+.vite-dev.err.log
+
+.DS_Store
+Thumbs.db
