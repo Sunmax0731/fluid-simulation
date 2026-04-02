@@ -9,12 +9,15 @@
 <body>
   <canvas id="canvas"></canvas>
 
+  <div class="topLinks">
+    <a id="projectTop" href="../../fluid-simulation.html">&lt;- Project Top</a>
+    <a id="back" href="../">&lt;- Back to gallery</a>
+  </div>
+
   <div class="headline">
     <strong>Ink Flow</strong>
     <span>3D liquid basin for glossy pigment sheets, refractive edges, and realtime splash control</span>
   </div>
-
-  <a id="back" href="../">&lt;- Back to gallery</a>
   <div id="leftDock">
     <div class="dockGroup">
       <div class="dockLabel">Scenes</div>
@@ -44,6 +47,12 @@
     Left drag paints fluid. Right drag orbits the camera. Wheel zooms. Keys: <strong>1 / 2 / 3</strong> scene, <strong>B</strong> bubble tool, <strong>V</strong> velocity view, <strong>R</strong> reset. Use the right panel for thickness, refraction, fresnel, and caustics.
   </div>
 
+  <script>
+    const projectTop = document.getElementById('projectTop');
+    if (!window.location.pathname.includes('/fluid-simulation/')) {
+      projectTop.hidden = true;
+    }
+  </script>
   <script type="module" src="./main.js"></script>
 </body>
 </html>

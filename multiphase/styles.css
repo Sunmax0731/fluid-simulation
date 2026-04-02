@@ -42,6 +42,15 @@ canvas {
   pointer-events: none;
 }
 
+.topLinks {
+  position: fixed;
+  top: 18px;
+  left: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 4;
+}
+
 .headline strong {
   font-size: 0.78rem;
   letter-spacing: 0.16em;
@@ -54,10 +63,7 @@ canvas {
   font-size: 0.9rem;
 }
 
-#back {
-  position: fixed;
-  top: 86px;
-  left: 16px;
+.topLinks a {
   padding: 10px 14px;
   border-radius: 999px;
   border: 1px solid var(--line);
@@ -66,7 +72,10 @@ canvas {
   text-decoration: none;
   font-size: 0.82rem;
   backdrop-filter: blur(12px);
-  z-index: 4;
+}
+
+#projectTop[hidden] {
+  display: none;
 }
 
 #leftDock {
@@ -183,6 +192,7 @@ button.active {
 
 @media (max-width: 720px) {
   .headline {
+    top: 66px;
     width: calc(100vw - 96px);
   }
 
@@ -190,6 +200,13 @@ button.active {
     left: 12px;
     bottom: 12px;
     max-height: calc(100vh - 126px);
+  }
+
+  .topLinks {
+    left: 12px;
+    top: 12px;
+    flex-wrap: wrap;
+    max-width: calc(100vw - 24px);
   }
 
   #scenes button,

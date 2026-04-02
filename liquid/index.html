@@ -9,12 +9,15 @@
 <body>
   <canvas id="canvas"></canvas>
 
+  <div class="topLinks">
+    <a id="projectTop" href="../../fluid-simulation.html">&lt;- Project Top</a>
+    <a id="back" href="../">&lt;- Back to gallery</a>
+  </div>
+
   <div class="headline">
     <strong>Smoke &amp; Fire</strong>
     <span>3D plume presentation for campfire, mist, and thruster-style realtime FX</span>
   </div>
-
-  <a id="back" href="../">&lt;- Back to gallery</a>
   <div id="leftDock">
     <div class="dockGroup">
       <div class="dockLabel">Looks</div>
@@ -35,6 +38,12 @@
     Left drag injects plumes. Right drag orbits the camera. Wheel zooms. Keys: <strong>1 / 2 / 3</strong> switch looks, <strong>R</strong> resets.
   </div>
 
+  <script>
+    const projectTop = document.getElementById('projectTop');
+    if (!window.location.pathname.includes('/fluid-simulation/')) {
+      projectTop.hidden = true;
+    }
+  </script>
   <script type="module" src="./main.js"></script>
 </body>
 </html>

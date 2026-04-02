@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:docs": "vite build --base ./ --outDir ../docs/fluid-simulation --emptyOutDir",
     "preview": "vite preview"
   },
   "dependencies": {
