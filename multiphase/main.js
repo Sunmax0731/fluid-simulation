@@ -139,6 +139,14 @@ const surfaceState = {
   caustics: 0.42,
 };
 
+const brushState = {
+  paintForce: 0.28,
+  paintAmount: 1.0,
+  bubbleForce: 0.42,
+  bubbleCarve: 0.95,
+  ambientMotion: 0.14,
+};
+
 scene.add(new THREE.HemisphereLight(0x7c8ba6, 0x11131a, 1.25));
 
 const keyLight = new THREE.DirectionalLight(0xe6f0ff, 1.22);
@@ -448,6 +456,11 @@ function handleControl(key, value) {
   if (key === 'dt') solver.dt = value;
   if (key === 'jacobiIter') solver.jacobiIter = Math.round(value);
   if (key === 'brushRadius') brushRadius = value;
+  if (key === 'paintForce') brushState.paintForce = value;
+  if (key === 'paintAmount') brushState.paintAmount = value;
+  if (key === 'bubbleForce') brushState.bubbleForce = value;
+  if (key === 'bubbleCarve') brushState.bubbleCarve = value;
+  if (key === 'ambientMotion') brushState.ambientMotion = value;
   if (key === 'velocityDamping') solver.velocityDamping = value;
   if (key === 'inkRetention') solver.inkRetention = value;
 
@@ -484,10 +497,21 @@ function handleControl(key, value) {
     fluidUniforms.u_caustics.value = value;
     syncViewMaterials();
   }
+  if (key === 'exposure') renderer.toneMappingExposure = value;
+  if (key === 'fogDensity') scene.fog.density = value;
 }
+
+const controlSections = {
+  simulation: { section: 'Simulation', sectionOrder: 1 },
+  brush: { section: 'Brush & Flow', sectionOrder: 2 },
+  surface: { section: 'Surface Form', sectionOrder: 3 },
+  optics: { section: 'Optical Look', sectionOrder: 4 },
+};
 
 const controls = new Controls({
   gravity: {
+    ...controlSections.simulation,
+    order: 1,
     label: 'Gravity',
     min: 0,
     max: 20,
@@ -496,6 +520,8 @@ const controls = new Controls({
     description: '液体を下方向へ引く強さです。大きいほど滴下や崩れが速くなり、壁際まで押し出された流れの戻りも強くなります。',
   },
   dt: {
+    ...controlSections.simulation,
+    order: 2,
     label: 'Time Step',
     min: 0.01,
     max: 0.35,
@@ -504,6 +530,8 @@ const controls = new Controls({
     description: '1 step ごとの進み量です。大きいほど変化は速く見えますが、値を上げすぎると表面が荒れて不安定になります。',
   },
   jacobiIter: {
+    ...controlSections.simulation,
+    order: 3,
     label: 'Pressure Iter',
     min: 5,
     max: 60,
@@ -512,16 +540,9 @@ const controls = new Controls({
     decimals: 0,
     description: '圧力解法の反復回数です。増やすほど体積保持と流線が安定し、少ないとにじみや圧縮感が残ります。',
   },
-  brushRadius: {
-    label: 'Brush Radius',
-    min: 10,
-    max: 60,
-    step: 1,
-    value: 26,
-    decimals: 0,
-    description: 'クリックやドラッグで加える範囲です。大きいほど大きなインク塊になり、広い膜や波打つ境界が出やすくなります。',
-  },
   velocityDamping: {
+    ...controlSections.simulation,
+    order: 4,
     label: 'Velocity Damping',
     min: 0.985,
     max: 1.0,
@@ -530,6 +551,8 @@ const controls = new Controls({
     description: '流速の減衰量です。下げると流れが早く失速し、上げると尾や巻き返しが長く残ります。',
   },
   inkRetention: {
+    ...controlSections.simulation,
+    order: 5,
     label: 'Ink Retention',
     min: 0.96,
     max: 1.0,
@@ -537,7 +560,70 @@ const controls = new Controls({
     value: 1.0,
     description: 'インク量の保持率です。下げると薄く消えていき、上げると濃い塊や筋が長く残ります。',
   },
+  brushRadius: {
+    ...controlSections.brush,
+    order: 1,
+    label: 'Brush Radius',
+    min: 10,
+    max: 60,
+    step: 1,
+    value: 26,
+    decimals: 0,
+    description: 'クリックやドラッグで加える範囲です。大きいほど大きなインク塊になり、広い膜や波打つ境界が出やすくなります。',
+  },
+  paintForce: {
+    ...controlSections.brush,
+    order: 2,
+    label: 'Paint Force',
+    min: 0.05,
+    max: 0.8,
+    step: 0.01,
+    value: brushState.paintForce,
+    description: 'ペイント時に流れへ与える勢いです。高いほど引きずる尾が長くなり、激しい攪拌のような跡が残ります。',
+  },
+  paintAmount: {
+    ...controlSections.brush,
+    order: 3,
+    label: 'Paint Amount',
+    min: 0.2,
+    max: 1.2,
+    step: 0.01,
+    value: brushState.paintAmount,
+    description: 'ペイント時に加える液量です。高いほど厚いインクの塊になり、低いほど薄い膜を重ねる感触になります。',
+  },
+  bubbleForce: {
+    ...controlSections.brush,
+    order: 4,
+    label: 'Bubble Force',
+    min: 0.05,
+    max: 0.9,
+    step: 0.01,
+    value: brushState.bubbleForce,
+    description: '気泡をくり抜くときの押し広げる勢いです。高いほど周囲の液体を大きく押しのけ、縁に強い波が立ちます。',
+  },
+  bubbleCarve: {
+    ...controlSections.brush,
+    order: 5,
+    label: 'Bubble Carve',
+    min: 0.2,
+    max: 1.2,
+    step: 0.01,
+    value: brushState.bubbleCarve,
+    description: '気泡操作でどれだけ液体を削るかです。高いほどはっきり穴が空き、低いと柔らかくえぐるような見え方になります。',
+  },
+  ambientMotion: {
+    ...controlSections.brush,
+    order: 6,
+    label: 'Ambient Motion',
+    min: 0.0,
+    max: 0.4,
+    step: 0.01,
+    value: brushState.ambientMotion,
+    description: '操作していない間のゆるい流れの強さです。上げるほど表面に常時うねりが残り、下げると静かなトレイになります。',
+  },
   surfaceHeight: {
+    ...controlSections.surface,
+    order: 1,
     label: 'Surface Height',
     min: 0.06,
     max: 0.28,
@@ -546,6 +632,8 @@ const controls = new Controls({
     description: '液体を厚みとして持ち上げる量です。大きいほど膜の輪郭が立体的になり、インクが盛り上がって見えます。',
   },
   surfaceRelief: {
+    ...controlSections.surface,
+    order: 2,
     label: 'Surface Relief',
     min: 0.0,
     max: 0.12,
@@ -554,6 +642,8 @@ const controls = new Controls({
     description: '表面の細かな凹凸量です。上げると反射が割れ、薄膜のうねりや粘る質感が強調されます。',
   },
   meniscus: {
+    ...controlSections.surface,
+    order: 3,
     label: 'Meniscus',
     min: 0.0,
     max: 0.14,
@@ -562,6 +652,8 @@ const controls = new Controls({
     description: '液体の縁が立ち上がる量です。上げるほど端で盛り上がり、容器内の濡れた膜らしさが増します。',
   },
   absorption: {
+    ...controlSections.optics,
+    order: 1,
     label: 'Absorption',
     min: 0.4,
     max: 3.2,
@@ -570,6 +662,8 @@ const controls = new Controls({
     description: '液体内部で光を吸収する強さです。大きいほど中心が濃く暗くなり、深い色味と厚みが出ます。',
   },
   refraction: {
+    ...controlSections.optics,
+    order: 2,
     label: 'Refraction',
     min: 0.0,
     max: 0.45,
@@ -578,6 +672,8 @@ const controls = new Controls({
     description: '表面越しに見える模様の歪み量です。上げると下層や反射が揺れて、液体らしい屈折感が強まります。',
   },
   fresnel: {
+    ...controlSections.optics,
+    order: 3,
     label: 'Fresnel',
     min: 0.0,
     max: 1.8,
@@ -586,6 +682,8 @@ const controls = new Controls({
     description: '視線角で反射が増える量です。上げると斜めから見た縁が明るくなり、濡れた薄膜の存在感が増します。',
   },
   specular: {
+    ...controlSections.optics,
+    order: 4,
     label: 'Specular',
     min: 0.2,
     max: 2.0,
@@ -594,12 +692,34 @@ const controls = new Controls({
     description: 'ハイライトの鋭さと強さです。上げると濡れたインク表面の照り返しが強くなります。',
   },
   caustics: {
+    ...controlSections.optics,
+    order: 5,
     label: 'Caustics',
     min: 0.0,
     max: 1.0,
     step: 0.02,
     value: surfaceState.caustics,
     description: '液体の下側に落ちる淡い光だまりの強さです。上げるとトレイ底面への色移りと厚み感が増します。',
+  },
+  exposure: {
+    ...controlSections.optics,
+    order: 6,
+    label: 'Exposure',
+    min: 0.7,
+    max: 1.4,
+    step: 0.01,
+    value: renderer.toneMappingExposure,
+    description: '画面全体の明るさです。上げるとハイライトや透明感が目立ち、下げると色の深さとコントラストが強まります。',
+  },
+  fogDensity: {
+    ...controlSections.optics,
+    order: 7,
+    label: 'Fog Density',
+    min: 0.02,
+    max: 0.1,
+    step: 0.001,
+    value: scene.fog.density,
+    description: '背景側の霞みの量です。上げるほど奥行きが強調され、下げるとトレイ全体がくっきり見えます。',
   },
 }, handleControl, {
   title: 'Ink Controls',
@@ -794,8 +914,8 @@ function paint() {
   const erase = currentTool === 'bubble';
   solver.splat(interaction.simPoint.x, interaction.simPoint.y, interaction.velocity.x, interaction.velocity.y, {
     radius: brushRadius,
-    velocityAmount: erase ? 0.42 : 0.28,
-    fluidAmount: erase ? 0.95 : 1.0,
+    velocityAmount: erase ? brushState.bubbleForce : brushState.paintForce,
+    fluidAmount: erase ? brushState.bubbleCarve : brushState.paintAmount,
     erase,
   });
 
@@ -803,12 +923,12 @@ function paint() {
 }
 
 function addAmbientMotion() {
-  if (currentScene !== 'sheet') return;
+  if (currentScene !== 'sheet' || brushState.ambientMotion <= 0.0) return;
 
   const y = H * 0.58 + Math.sin(time * 0.9) * H * 0.02;
   solver.splat(W * 0.14, y, 0.65, 0.0, {
     radius: brushRadius * 1.8,
-    velocityAmount: 0.14,
+    velocityAmount: brushState.ambientMotion,
     fluidAmount: 0.0,
   });
 }

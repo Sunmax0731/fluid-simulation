@@ -354,8 +354,18 @@ function handleControl(key, value) {
     solver.tempDissipation = Math.max(0.88, value - 0.018 * solver.cooling);
   }
   if (key === 'jacobiIter') solver.jacobiIter = Math.round(value);
+  if (key === 'lateralSpread') solver.lateralSpread = value;
+  if (key === 'verticalLift') solver.verticalLift = value;
+  if (key === 'cooling') {
+    solver.cooling = value;
+    solver.tempDissipation = Math.max(0.88, solver.dissipation - 0.018 * value);
+  }
   if (key === 'emitterRadius') emitter.radius = value;
   if (key === 'emitterForce') emitter.force = value;
+  if (key === 'velocityAmount') emitter.velocityAmount = value;
+  if (key === 'densityAmount') emitter.densityAmount = value;
+  if (key === 'temperatureAmount') emitter.temperatureAmount = value;
+  if (key === 'autoWander') emitter.autoWander = value;
   if (key === 'volumeDepth') {
     plumeVolume.scale.z = value;
     emitterDiskExtents.z = value * 0.5;
@@ -365,10 +375,21 @@ function handleControl(key, value) {
   if (key === 'shadowing') plumeUniforms.u_shadowStrength.value = value;
   if (key === 'warpAmount') plumeUniforms.u_warpAmount.value = value;
   if (key === 'emissionGain') plumeUniforms.u_emissionGain.value = value;
+  if (key === 'exposure') renderer.toneMappingExposure = value;
+  if (key === 'fogDensity') scene.fog.density = value;
 }
+
+const controlSections = {
+  simulation: { section: 'Simulation', sectionOrder: 1 },
+  emitter: { section: 'Emitter', sectionOrder: 2 },
+  volume: { section: 'Volume Look', sectionOrder: 3 },
+  atmosphere: { section: 'Atmosphere', sectionOrder: 4 },
+};
 
 const controls = new Controls({
   buoyancy: {
+    ...controlSections.simulation,
+    order: 1,
     label: 'Buoyancy',
     min: 0,
     max: 5,
@@ -377,6 +398,8 @@ const controls = new Controls({
     description: '3D グリッド内で温度を上向き速度へ変換する強さです。大きいほど煙柱が高く伸び、立ち上がりが速くなります。',
   },
   vorticity: {
+    ...controlSections.simulation,
+    order: 2,
     label: 'Vorticity',
     min: 0,
     max: 30,
@@ -385,6 +408,8 @@ const controls = new Controls({
     description: 'ボクセル間の横渦と巻き込み量です。値を上げると奥行き方向にもねじれが出て、立体的な乱流になります。',
   },
   dissipation: {
+    ...controlSections.simulation,
+    order: 3,
     label: 'Dissipation',
     min: 0.95,
     max: 1.0,
@@ -393,6 +418,8 @@ const controls = new Controls({
     description: '密度と熱が 3D グリッド内でどれだけ残るかを制御します。高いほど煙が長く残り、低いほど薄く消えます。',
   },
   jacobiIter: {
+    ...controlSections.simulation,
+    order: 4,
     label: 'Velocity Smooth',
     min: 5,
     max: 40,
@@ -401,24 +428,100 @@ const controls = new Controls({
     decimals: 0,
     description: '速度場の平滑化量です。上げると流れが滑らかに繋がり、低いと荒く切れた乱れが出ます。',
   },
+  lateralSpread: {
+    ...controlSections.simulation,
+    order: 5,
+    label: 'Lateral Spread',
+    min: 0.35,
+    max: 1.8,
+    step: 0.01,
+    value: solver.lateralSpread,
+    description: '煙や炎が左右へ広がる強さです。大きいほど横に膨らみ、低いほど細い柱のまま立ち上がります。',
+  },
+  verticalLift: {
+    ...controlSections.simulation,
+    order: 6,
+    label: 'Vertical Lift',
+    min: 0.45,
+    max: 1.7,
+    step: 0.01,
+    value: solver.verticalLift,
+    description: '上昇方向の持ち上がりです。高いほど立ち上がりが速くなり、低いほど横へ流れやすくなります。',
+  },
+  cooling: {
+    ...controlSections.simulation,
+    order: 7,
+    label: 'Cooling',
+    min: 0.6,
+    max: 1.4,
+    step: 0.01,
+    value: solver.cooling,
+    description: '熱が失われる速さです。大きいほど火は早く冷えて煙へ移り、小さいほど高温の芯が長く残ります。',
+  },
   emitterRadius: {
+    ...controlSections.emitter,
+    order: 1,
     label: 'Emitter Radius',
     min: 10,
     max: 56,
     step: 1,
-    value: 28,
+    value: emitter.radius,
     decimals: 0,
     description: '3D グリッドへ注入する範囲です。大きいほど太い煙柱や広い炎になり、小さいほど集中した噴出になります。',
   },
   emitterForce: {
+    ...controlSections.emitter,
+    order: 2,
     label: 'Emitter Force',
     min: 0.5,
     max: 6.5,
     step: 0.1,
-    value: 3.2,
+    value: emitter.force,
     description: '噴出時に与える初速です。高いほど密度グリッド内で押し上げが強くなり、ジェット感が増します。',
   },
+  velocityAmount: {
+    ...controlSections.emitter,
+    order: 3,
+    label: 'Emitter Velocity',
+    min: 0.1,
+    max: 0.9,
+    step: 0.01,
+    value: emitter.velocityAmount,
+    description: '注入した瞬間に与える流速の量です。上げるほど押し出しが強くなり、勢いのある炎や煙になります。',
+  },
+  densityAmount: {
+    ...controlSections.emitter,
+    order: 4,
+    label: 'Emitter Density',
+    min: 0.2,
+    max: 1.6,
+    step: 0.01,
+    value: emitter.densityAmount,
+    description: '1 回の噴出で加える密度の量です。高いほど煙の塊が濃くなり、ボリュームの芯が太く見えます。',
+  },
+  temperatureAmount: {
+    ...controlSections.emitter,
+    order: 5,
+    label: 'Emitter Heat',
+    min: 0.0,
+    max: 1.8,
+    step: 0.01,
+    value: emitter.temperatureAmount,
+    description: '噴出に含める熱量です。高いほど燃焼色が明るくなり、上昇も強くなります。低いと霧や煙に寄ります。',
+  },
+  autoWander: {
+    ...controlSections.emitter,
+    order: 6,
+    label: 'Auto Wander',
+    min: 0.0,
+    max: 0.22,
+    step: 0.005,
+    value: emitter.autoWander,
+    description: '自動噴出時の発生位置の揺れ幅です。上げるほど火元やミストが左右にうねり、低いと真上へ安定して立ちます。',
+  },
   volumeDepth: {
+    ...controlSections.volume,
+    order: 1,
     label: 'Volume Depth',
     min: 2.4,
     max: 6.8,
@@ -427,6 +530,8 @@ const controls = new Controls({
     description: '3D ボリューム描画の奥行きです。大きいほど横から見たときの厚みが増え、ボクセルの立体感が強く見えます。',
   },
   densityGain: {
+    ...controlSections.volume,
+    order: 2,
     label: 'Density Gain',
     min: 0.55,
     max: 1.9,
@@ -435,6 +540,8 @@ const controls = new Controls({
     description: '密度グリッドの見た目の濃さです。高いほど煙は重く、炎は芯の詰まったボリュームになります。',
   },
   shadowing: {
+    ...controlSections.volume,
+    order: 3,
     label: 'Self Shadow',
     min: 0.0,
     max: 2.0,
@@ -443,6 +550,8 @@ const controls = new Controls({
     description: 'ボリューム内部の自己陰影です。高いほど奥が暗くなり、内部の厚みや層構造が分かりやすくなります。',
   },
   warpAmount: {
+    ...controlSections.volume,
+    order: 4,
     label: 'Depth Warp',
     min: 0.0,
     max: 0.18,
@@ -451,12 +560,34 @@ const controls = new Controls({
     description: '3D テクスチャ参照時の微小な歪み量です。上げると密度グリッドの格子感が減り、より自然な揺らぎになります。',
   },
   emissionGain: {
+    ...controlSections.volume,
+    order: 5,
     label: 'Emission',
     min: 0.5,
     max: 1.8,
     step: 0.01,
     value: 1.18,
     description: '体積発光の強さです。炎では輝度、煙では散乱の明るさに効き、熱量の印象を調整します。',
+  },
+  exposure: {
+    ...controlSections.atmosphere,
+    order: 1,
+    label: 'Exposure',
+    min: 0.7,
+    max: 1.4,
+    step: 0.01,
+    value: renderer.toneMappingExposure,
+    description: '画面全体の露出です。上げるほど火の明るさや霧の白さが強まり、下げると締まった暗部が残ります。',
+  },
+  fogDensity: {
+    ...controlSections.atmosphere,
+    order: 2,
+    label: 'Fog Density',
+    min: 0.02,
+    max: 0.12,
+    step: 0.001,
+    value: scene.fog.density,
+    description: '背景側に溜まる空気の霞みです。上げるほど奥が沈んで立体感が出て、下げると全体がクリアに見えます。',
   },
 }, handleControl, {
   title: 'Volume Controls',
@@ -671,13 +802,22 @@ function applyLook(name) {
   controls.setValue('vorticity', look.vorticity, true);
   controls.setValue('dissipation', look.dissipation, true);
   controls.setValue('jacobiIter', look.jacobiIter, true);
+  controls.setValue('lateralSpread', look.lateralSpread, true);
+  controls.setValue('verticalLift', look.verticalLift, true);
+  controls.setValue('cooling', look.cooling, true);
   controls.setValue('emitterRadius', look.emitterRadius, true);
   controls.setValue('emitterForce', look.emitterForce, true);
+  controls.setValue('velocityAmount', look.velocityAmount, true);
+  controls.setValue('densityAmount', look.densityAmount, true);
+  controls.setValue('temperatureAmount', look.temperatureAmount, true);
+  controls.setValue('autoWander', look.autoWander, true);
   controls.setValue('volumeDepth', look.volumeDepth, true);
   controls.setValue('densityGain', look.densityGain, true);
   controls.setValue('shadowing', look.shadowing, true);
   controls.setValue('warpAmount', look.warpAmount, true);
   controls.setValue('emissionGain', look.emissionGain, true);
+  controls.setValue('exposure', look.exposure, true);
+  controls.setValue('fogDensity', look.fogDensity, true);
 
   emitter.velocityAmount = look.velocityAmount;
   emitter.densityAmount = look.densityAmount;
