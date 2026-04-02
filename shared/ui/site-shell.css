@@ -221,6 +221,10 @@ a {
 
 .sim-frame-header .sim-info-card {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.8rem 1rem;
 }
 
 .feature-badge {
@@ -265,11 +269,21 @@ a {
   text-transform: uppercase;
 }
 
+.sim-frame-header .sim-info-card strong {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
 .sim-info-card p,
 .sim-note {
   color: var(--sim-muted);
   font-size: 0.9rem;
   line-height: 1.7;
+}
+
+.sim-frame-header .sim-info-card p {
+  margin: 0;
+  line-height: 1.45;
 }
 
 .sim-note {
@@ -440,6 +454,14 @@ canvas {
 
   .sim-layout {
     grid-template-columns: 1fr;
+  }
+
+  .sim-frame-header .sim-info-card {
+    display: block;
+  }
+
+  .sim-frame-header .sim-info-card strong {
+    margin-bottom: 0.35rem;
   }
 }
 
