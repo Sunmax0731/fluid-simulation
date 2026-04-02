@@ -12,7 +12,6 @@
   <header class="simHeader">
     <nav class="simNav" aria-label="Simulation navigation">
       <a id="siteTopLink" href="../../index.html">トップページ</a>
-      <a id="overviewLink" href="../../fluid-simulation.html">流体シミュレーション</a>
       <a href="../airflow/" class="active">Ocean Surface</a>
       <a href="../liquid/">Smoke &amp; Fire</a>
       <a href="../multiphase/">Ink Flow</a>
@@ -56,7 +55,6 @@
     const deployed = window.location.pathname.includes('/fluid-simulation/');
     if (!deployed) {
       document.getElementById('siteTopLink').hidden = true;
-      document.getElementById('overviewLink').hidden = true;
     }
   </script>
   <script type="module" src="./main.js"></script>
