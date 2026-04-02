@@ -10,8 +10,8 @@
 <body class="sim-page ink-page">
   <nav class="site-nav" aria-label="グローバルナビゲーション">
     <a id="siteTopLink" href="../../index.html" class="nav-brand">
-      <span class="brand-icon">🫧</span>
-      <span>流体シミュレーション</span>
+      <span class="brand-icon">墨</span>
+      <span>成果物シミュレーション</span>
     </a>
     <ul class="nav-links">
       <li><a href="../airflow/">Ocean Surface</a></li>
@@ -25,13 +25,14 @@
       <div class="hero-bg-text">INK</div>
       <div class="container">
         <div class="breadcrumb">
-          <a id="heroTopLink" href="../../index.html">ホーム</a><span class="sep">›</span>
+          <a id="heroTopLink" href="../../index.html">トップ</a><span class="sep">›</span>
           <span class="current">Ink Flow</span>
         </div>
         <span class="domain-badge">Fluid / Ink Flow</span>
         <h1 class="hero-title">Ink Flow</h1>
         <p class="hero-copy">
-          絵の具の膜、気泡を削る操作、光の屈折まで含めて、艶のある液膜表現を三次元で確認できるインクシミュレーションです。
+          透明な液膜の上にインクを流し込み、混ざり方、膜の厚み、屈折や集光模様まで確認できる 3D 液体シミュレーションです。
+          筆のように描き込みながら、液体の見た目をその場で変えられます。
         </p>
       </div>
     </section>
@@ -39,23 +40,27 @@
     <section class="section alt">
       <div class="container">
         <div class="viz-card">
-          <h3>液膜として見るインクの流れ</h3>
+          <h3>液膜の上を流れるインク表現</h3>
           <p>
-            屈折や集光模様を伴う液膜表現を表示しながら、シーン、色、ツールを切り替えて挙動を確認できます。3D 表示領域の外側に説明とメニューを配置しています。
+            シーン、色、描画ツールを切り替えながら、インクの滞留や広がり、光学的な見え方を比較できます。
+            左側で操作モードを切り替え、右側で流動と見た目の両方を調整できます。
           </p>
-          <div class="feature-badges">
-            <span class="feature-badge">Glossy Ink Surface</span>
-            <span class="feature-badge">Refraction &amp; Caustics</span>
-            <span class="feature-badge">Paint &amp; Bubble Tool</span>
+
+          <div class="sim-frame-header">
+            <div class="feature-badges">
+              <span class="feature-badge">Glossy Ink Surface</span>
+              <span class="feature-badge">Refraction &amp; Caustics</span>
+              <span class="feature-badge">Paint &amp; Bubble Tool</span>
+            </div>
+            <div class="sim-info-card">
+              <strong>Glossy Liquid Sheet</strong>
+              <p>液膜の厚みとインクの濃度を別々に扱い、反射や屈折を含めて立体的に見せる液体表現シミュレーションです。</p>
+              <p>表示領域をドラッグしてインクを描き込み、<strong>1 / 2 / 3</strong> でシーン切替、<strong>B</strong> で気泡ツール、<strong>V</strong> で表示切替、<strong>R</strong> でリセットできます。右側では流れの強さ、膜の厚み、屈折、集光模様を調整できます。</p>
+            </div>
           </div>
 
           <div class="sim-layout">
             <aside class="sim-sidebar sim-sidebar-left">
-              <div class="sim-info-card">
-                <strong>Glossy Liquid Sheet</strong>
-                <p>屈折、集光模様、液膜の厚みを調整しながら、立体感のあるインクの流れを確認できます。</p>
-              </div>
-
               <div id="leftDock">
                 <div class="dockGroup">
                   <div class="dockLabel">Scenes</div>
@@ -79,10 +84,6 @@
                     <button id="resetButton">Reset Scene</button>
                   </div>
                 </div>
-              </div>
-
-              <div class="sim-note">
-                左ドラッグで液体を描き、右ドラッグで視点を回転、ホイールで拡大縮小できます。<strong>1 / 2 / 3</strong> でシーン切替、<strong>B</strong> で気泡ツール、<strong>V</strong> で速度表示、<strong>R</strong> でリセットです。右側のパネルでは膜厚、屈折、視線角反射、集光模様などを調整できます。
               </div>
             </aside>
 

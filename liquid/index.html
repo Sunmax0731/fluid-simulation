@@ -10,8 +10,8 @@
 <body class="sim-page smoke-page">
   <nav class="site-nav" aria-label="グローバルナビゲーション">
     <a id="siteTopLink" href="../../index.html" class="nav-brand">
-      <span class="brand-icon">🔥</span>
-      <span>流体シミュレーション</span>
+      <span class="brand-icon">火</span>
+      <span>成果物シミュレーション</span>
     </a>
     <ul class="nav-links">
       <li><a href="../airflow/">Ocean Surface</a></li>
@@ -25,13 +25,14 @@
       <div class="hero-bg-text">SMOKE</div>
       <div class="container">
         <div class="breadcrumb">
-          <a id="heroTopLink" href="../../index.html">ホーム</a><span class="sep">›</span>
+          <a id="heroTopLink" href="../../index.html">トップ</a><span class="sep">›</span>
           <span class="current">Smoke &amp; Fire</span>
         </div>
         <span class="domain-badge">Fluid / Smoke &amp; Fire</span>
         <h1 class="hero-title">Smoke &amp; Fire</h1>
         <p class="hero-copy">
-          たき火、霧、噴射炎の見え方を切り替えながら、三次元の密度ボリュームとして煙と炎の表現を観察できるページです。
+          3D 密度グリッドを使って、炎、煙、霧の立ち上がり方や広がり方を立体的に確認できるボリュームシミュレーションです。
+          クリック位置に合わせて発生源を置き、見た目と挙動をその場で調整できます。
         </p>
       </div>
     </section>
@@ -39,23 +40,27 @@
     <section class="section alt">
       <div class="container">
         <div class="viz-card">
-          <h3>煙と炎の立体ボリューム表現</h3>
+          <h3>炎と煙の立体ボリューム表現</h3>
           <p>
-            三種類の見え方を切り替えながら、内部では三次元の煙と炎をそのまま表示します。3D 表示領域の外側に説明、切替、詳細パラメータを分離しています。
+            たき火、霧、噴射炎の 3 種類の見た目を切り替えながら、密度・熱・浮力の挙動を比較できます。
+            左側で表現を切り替え、右側で発生量や拡散、見た目の濃さを細かく詰められます。
           </p>
-          <div class="feature-badges">
-            <span class="feature-badge">3D Density Grid</span>
-            <span class="feature-badge">Fire / Mist / Thruster</span>
-            <span class="feature-badge">Interactive Plume</span>
+
+          <div class="sim-frame-header">
+            <div class="feature-badges">
+              <span class="feature-badge">3D Density Grid</span>
+              <span class="feature-badge">Fire / Mist / Thruster</span>
+              <span class="feature-badge">Interactive Plume</span>
+            </div>
+            <div class="sim-info-card">
+              <strong>Volumetric Plume</strong>
+              <p>密度と温度を 3D グリッドで保持し、体積を持つ煙と炎として可視化するリアルタイムボリュームシミュレーションです。</p>
+              <p>表示領域をクリックまたはドラッグすると発生源を移動できます。<strong>1 / 2 / 3</strong> で表現切替、<strong>R</strong> で初期化です。右側の調整で横方向の広がり、上昇感、発光、霧の濃さを詰められます。</p>
+            </div>
           </div>
 
           <div class="sim-layout">
             <aside class="sim-sidebar sim-sidebar-left">
-              <div class="sim-info-card">
-                <strong>Volumetric Plume</strong>
-                <p>三種類の表現を切り替えながら、厚みのある煙と炎を三次元ボリュームで観察できます。</p>
-              </div>
-
               <div id="leftDock">
                 <div class="dockGroup">
                   <div class="dockLabel">Looks</div>
@@ -70,10 +75,6 @@
                   <div class="dockLabel">Current</div>
                   <div id="status">Look: <span id="lookName">Campfire</span></div>
                 </div>
-              </div>
-
-              <div class="sim-note">
-                左ドラッグで煙や炎を注入し、右ドラッグで視点を回転、ホイールで拡大縮小できます。<strong>1 / 2 / 3</strong> で表現を切り替え、<strong>R</strong> で初期化します。右側のパネルでは密度、自己陰影、立ち上がり方、空気感を細かく調整できます。
               </div>
             </aside>
 

@@ -107,7 +107,7 @@ a {
 }
 
 .container {
-  max-width: 1180px;
+  max-width: 1680px;
   margin: 0 auto;
   padding: 0 var(--space-xl);
 }
@@ -213,6 +213,16 @@ a {
   margin-bottom: 1.2rem;
 }
 
+.sim-frame-header {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.sim-frame-header .sim-info-card {
+  margin: 0;
+}
+
 .feature-badge {
   display: inline-flex;
   align-items: center;
@@ -227,7 +237,7 @@ a {
 
 .sim-layout {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 300px;
+  grid-template-columns: 200px minmax(0, 1fr) 320px;
   gap: var(--space-lg);
   align-items: start;
 }
@@ -396,7 +406,7 @@ canvas {
 
 @media (max-width: 1120px) {
   .sim-layout {
-    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-columns: 200px minmax(0, 1fr);
   }
 
   .sim-sidebar-right {

@@ -10,8 +10,8 @@
 <body class="sim-page ocean-page">
   <nav class="site-nav" aria-label="グローバルナビゲーション">
     <a id="siteTopLink" href="../../index.html" class="nav-brand">
-      <span class="brand-icon">🌊</span>
-      <span>流体シミュレーション</span>
+      <span class="brand-icon">水</span>
+      <span>成果物シミュレーション</span>
     </a>
     <ul class="nav-links">
       <li><a href="../airflow/" class="active">Ocean Surface</a></li>
@@ -25,13 +25,14 @@
       <div class="hero-bg-text">WATER</div>
       <div class="container">
         <div class="breadcrumb">
-          <a id="heroTopLink" href="../../index.html">ホーム</a><span class="sep">›</span>
+          <a id="heroTopLink" href="../../index.html">トップ</a><span class="sep">›</span>
           <span class="current">Ocean Surface</span>
         </div>
         <span class="domain-badge">Fluid / Ocean Surface</span>
         <h1 class="hero-title">Ocean Surface</h1>
         <p class="hero-copy">
-          透明感のある水槽内で、静かな水面から雨や落下物までを連続的に観察できる三次元の水面シミュレーションです。
+          静かな水面から大きな着水までをひとつの水槽内で観察できる、水面変位に特化した 3D シミュレーションです。
+          壁面反射、飛沫、雨、透明感のある水表現をまとめて確認できます。
         </p>
       </div>
     </section>
@@ -39,23 +40,27 @@
     <section class="section alt">
       <div class="container">
         <div class="viz-card">
-          <h3>水槽内の水面シミュレーション</h3>
+          <h3>水槽内の波と衝撃の伝播</h3>
           <p>
-            凪の状態から雨や落下物を加え、水面の広がり、壁反射、水しぶきまでを一つの画面で確認できます。3D 表示領域の外側にメニューと説明を分け、観察しやすい構成にしています。
+            水面に加わる衝撃がどのように全体へ広がるかを、ガラス槽の中で連続的に確認できます。
+            左側でプリセットや落下アクションを切り替え、右側で波の保持時間や水槽条件、見た目を細かく調整できます。
           </p>
-          <div class="feature-badges">
-            <span class="feature-badge">3D Water Tank</span>
-            <span class="feature-badge">Wall Reflection</span>
-            <span class="feature-badge">Rain &amp; Impact</span>
+
+          <div class="sim-frame-header">
+            <div class="feature-badges">
+              <span class="feature-badge">3D Water Tank</span>
+              <span class="feature-badge">Wall Reflection</span>
+              <span class="feature-badge">Rain &amp; Impact</span>
+            </div>
+            <div class="sim-info-card">
+              <strong>Live Water Tank</strong>
+              <p>ガラス槽の中で、水面変位と飛沫が時間経過とともにどう残るかを観察するリアルタイム水面シミュレーションです。</p>
+              <p><strong>Nagi</strong> で静かな初期状態に戻し、<strong>Water Drop</strong> や <strong>Rain</strong> で後天的な衝撃を加えると、波の伝播と反射を追いやすくなります。キー操作は <strong>1 - 5</strong> がプリセット、<strong>Q / W / E</strong> が落下物、<strong>T</strong> が雨、<strong>R</strong> がリセットです。</p>
+            </div>
           </div>
 
           <div class="sim-layout">
             <aside class="sim-sidebar sim-sidebar-left">
-              <div class="sim-info-card">
-                <strong>Live Water Tank</strong>
-                <p>壁反射、雨、落下物、水しぶきまで含めて三次元で観察できる水槽シーンです。</p>
-              </div>
-
               <div id="leftDock">
                 <div class="dockGroup">
                   <div class="dockLabel">Presets</div>
@@ -78,10 +83,6 @@
                     <button data-drop="clear">Clear</button>
                   </div>
                 </div>
-              </div>
-
-              <div class="sim-note">
-                ドラッグで視点回転、ホイールで拡大縮小できます。<strong>Nagi</strong> で凪の状態を作ったあとに <strong>Water Drop</strong> や <strong>Rain</strong> を使うと、後天的な衝撃による波の広がりと壁反射を観察しやすくなります。キー操作は <strong>1 - 5</strong> がプリセット、<strong>Q / W / E</strong> が落下物、<strong>T</strong> が雨、<strong>R</strong> がリセットです。
               </div>
             </aside>
 
