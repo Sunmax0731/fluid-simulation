@@ -125,7 +125,8 @@ canvas {
 
 #presets button:hover,
 #presets button.active,
-#actions button:hover {
+#actions button:hover,
+#actions button.active {
   transform: translateY(-2px);
   border-color: rgba(126, 224, 255, 0.5);
   background: rgba(11, 35, 52, 0.78);

@@ -6,8 +6,10 @@ import oceanVert from './shaders/ocean.vert.glsl?raw';
 import oceanFrag from './shaders/ocean.frag.glsl?raw';
 import skyVert from './shaders/sky.vert.glsl?raw';
 import skyFrag from './shaders/sky.frag.glsl?raw';
+import { WaterSurfaceSolver } from './water-surface-solver.js';
 
-const MAX_IMPACTS = 8;
+const MAX_VISIBLE_IMPACTS = 32;
+const MAX_IMPACT_HISTORY = 128;
 
 function showFatalError(message) {
   let panel = document.getElementById('fatal-error');
@@ -68,15 +70,50 @@ renderer.debug.onShaderError = (gl, program, vertexShader, fragmentShader) => {
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 const cameraTarget = new THREE.Vector3(0, 0.2, 0);
-const BASIN_HALF_SIZE = new THREE.Vector2(6.2, 6.2);
-const BASIN_DEPTH = 1.2;
+const spherical = { theta: 0.26, phi: 1.04, radius: 14 };
+
+function updateCamera() {
+  camera.position.set(
+    cameraTarget.x + spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta),
+    cameraTarget.y + spherical.radius * Math.cos(spherical.phi),
+    cameraTarget.z + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta),
+  );
+  camera.lookAt(cameraTarget);
+}
+
+const BASE_BASIN_HALF_SIZE = new THREE.Vector2(6.2, 6.2);
+const BASE_BASIN_DEPTH = 1.2;
 const WALL_HEIGHT = 1.85;
-const WALL_THICKNESS = 0.22;
-const DROP_MARGIN = 0.95;
+const WALL_THICKNESS = 0.03;
+const BASE_DROP_MARGIN = 0.95;
+const basinHalfSize = BASE_BASIN_HALF_SIZE.clone();
+let tankScale = 1.0;
+let tankDepthScale = 1.0;
+let basinDepth = BASE_BASIN_DEPTH;
+let waterDepthSetting = BASE_BASIN_DEPTH;
+let waterDepth = BASE_BASIN_DEPTH;
+let waterSurfaceY = 0.0;
+let glassThickness = WALL_THICKNESS;
+let solverResolution = 128;
+let activeImpactHistoryCount = MAX_IMPACT_HISTORY;
+let localWaveSeconds = 120.0;
+const dropControlState = {
+  size: 0.72,
+  mass: 0.76,
+};
+const rainState = {
+  enabled: false,
+  rate: 12,
+  intensity: 0.22,
+  accumulator: 0,
+};
+let simulationReady = false;
+let waterSolver = new WaterSurfaceSolver({ resolution: solverResolution, basinHalfSize });
+let controls;
 
 const oceanGeometry = new THREE.PlaneGeometry(
-  BASIN_HALF_SIZE.x * 2.0,
-  BASIN_HALF_SIZE.y * 2.0,
+  BASE_BASIN_HALF_SIZE.x * 2.0,
+  BASE_BASIN_HALF_SIZE.y * 2.0,
   192,
   192,
 );
@@ -88,8 +125,10 @@ const shallowColor = new THREE.Vector3(0.1, 0.55, 0.7);
 const deepColor = new THREE.Vector3(0.02, 0.08, 0.2);
 const subsurfaceColor = new THREE.Vector3(0.03, 0.42, 0.38);
 const foamTint = new THREE.Vector3(0.95, 0.97, 1.0);
-const impactUniforms = Array.from({ length: MAX_IMPACTS }, () => new THREE.Vector4(0, 0, -100, 0));
+const impactUniforms = Array.from({ length: MAX_VISIBLE_IMPACTS }, () => new THREE.Vector4(0, 0, -100, 0));
+const impactHistory = Array.from({ length: MAX_IMPACT_HISTORY }, () => new THREE.Vector4(0, 0, -100, 0));
 let impactCursor = 0;
+let impactHistoryCursor = 0;
 let impactGain = 1.0;
 let viscosity = 0.35;
 let wallReflectivity = 0.76;
@@ -100,9 +139,15 @@ const oceanUniforms = {
   u_windDir: { value: 0.18 },
   u_windSpeed: { value: 0.35 },
   u_viscosity: { value: viscosity },
-  u_basinHalfSize: { value: BASIN_HALF_SIZE },
+  u_basinHalfSize: { value: basinHalfSize },
   u_wallReflectivity: { value: wallReflectivity },
-  u_basinDepth: { value: BASIN_DEPTH },
+  u_dynamicHeight: { value: waterSolver.texture },
+  u_dynamicTexel: { value: new THREE.Vector2(1 / waterSolver.width, 1 / waterSolver.height) },
+  u_dynamicCellSize: { value: new THREE.Vector2(waterSolver.cellX, waterSolver.cellZ) },
+  u_dynamicGain: { value: 1.9 },
+  u_localWaveSeconds: { value: localWaveSeconds },
+  u_basinDepth: { value: basinDepth },
+  u_waterSurfaceY: { value: waterSurfaceY },
   u_waterClarity: { value: 0.72 },
   u_absorption: { value: 0.88 },
   u_cameraPos: { value: camera.position.clone() },
@@ -154,12 +199,12 @@ const basinBaseMaterial = new THREE.MeshStandardMaterial({
 
 const wallMaterial = new THREE.MeshPhysicalMaterial({
   color: 0xd6ebff,
-  roughness: 0.06,
+  roughness: 0.04,
   metalness: 0.04,
-  transmission: 0.88,
+  transmission: 0.92,
   transparent: true,
-  opacity: 0.3,
-  thickness: 0.42,
+  opacity: 0.24,
+  thickness: 0.18,
   ior: 1.12,
   clearcoat: 1.0,
   clearcoatRoughness: 0.04,
@@ -178,90 +223,92 @@ const basinGroup = new THREE.Group();
 scene.add(basinGroup);
 
 const basinBase = new THREE.Mesh(
-  new THREE.BoxGeometry(BASIN_HALF_SIZE.x * 2.0 + 1.2, 0.56, BASIN_HALF_SIZE.y * 2.0 + 1.2),
+  new THREE.BoxGeometry(BASE_BASIN_HALF_SIZE.x * 2.0 + 1.2, 0.56, BASE_BASIN_HALF_SIZE.y * 2.0 + 1.2),
   basinBaseMaterial,
 );
-basinBase.position.y = -BASIN_DEPTH - 0.32;
+basinBase.position.y = -BASE_BASIN_DEPTH - 0.32;
 basinGroup.add(basinBase);
 
 const basinFloor = new THREE.Mesh(
-  new THREE.BoxGeometry(BASIN_HALF_SIZE.x * 2.0, 0.08, BASIN_HALF_SIZE.y * 2.0),
+  new THREE.BoxGeometry(BASE_BASIN_HALF_SIZE.x * 2.0, 0.08, BASE_BASIN_HALF_SIZE.y * 2.0),
   basinFloorMaterial,
 );
-basinFloor.position.y = -BASIN_DEPTH - 0.04;
+basinFloor.position.y = -BASE_BASIN_DEPTH - 0.04;
 basinGroup.add(basinFloor);
 
-const wallCenterY = -BASIN_DEPTH + WALL_HEIGHT * 0.5;
-[
+const wallCenterY = -BASE_BASIN_DEPTH + WALL_HEIGHT * 0.5;
+const wallConfigs = [
   {
+    axis: 'x',
+    sign: 1,
     sx: WALL_THICKNESS,
     sy: WALL_HEIGHT,
-    sz: BASIN_HALF_SIZE.y * 2.0 + WALL_THICKNESS,
-    x: BASIN_HALF_SIZE.x + WALL_THICKNESS * 0.5,
-    z: 0,
+    sz: BASE_BASIN_HALF_SIZE.y * 2.0 + WALL_THICKNESS,
   },
   {
+    axis: 'x',
+    sign: -1,
     sx: WALL_THICKNESS,
     sy: WALL_HEIGHT,
-    sz: BASIN_HALF_SIZE.y * 2.0 + WALL_THICKNESS,
-    x: -BASIN_HALF_SIZE.x - WALL_THICKNESS * 0.5,
-    z: 0,
+    sz: BASE_BASIN_HALF_SIZE.y * 2.0 + WALL_THICKNESS,
   },
   {
-    sx: BASIN_HALF_SIZE.x * 2.0 + WALL_THICKNESS,
+    axis: 'z',
+    sign: 1,
+    sx: BASE_BASIN_HALF_SIZE.x * 2.0 + WALL_THICKNESS,
     sy: WALL_HEIGHT,
     sz: WALL_THICKNESS,
-    x: 0,
-    z: BASIN_HALF_SIZE.y + WALL_THICKNESS * 0.5,
   },
   {
-    sx: BASIN_HALF_SIZE.x * 2.0 + WALL_THICKNESS,
+    axis: 'z',
+    sign: -1,
+    sx: BASE_BASIN_HALF_SIZE.x * 2.0 + WALL_THICKNESS,
     sy: WALL_HEIGHT,
     sz: WALL_THICKNESS,
-    x: 0,
-    z: -BASIN_HALF_SIZE.y - WALL_THICKNESS * 0.5,
   },
-].forEach((cfg) => {
+];
+const wallMeshes = wallConfigs.map((cfg) => {
   const wall = new THREE.Mesh(new THREE.BoxGeometry(cfg.sx, cfg.sy, cfg.sz), wallMaterial);
-  wall.position.set(cfg.x, wallCenterY, cfg.z);
   wall.renderOrder = 2;
   basinGroup.add(wall);
+  return { mesh: wall, cfg };
 });
 
-const rimY = -BASIN_DEPTH + WALL_HEIGHT + 0.06;
-[
+const rimY = -BASE_BASIN_DEPTH + WALL_HEIGHT + 0.06;
+const rimConfigs = [
   {
-    sx: BASIN_HALF_SIZE.x * 2.0 + WALL_THICKNESS * 2.4,
+    axis: 'z',
+    sign: 1,
+    sx: BASE_BASIN_HALF_SIZE.x * 2.0 + WALL_THICKNESS * 2.4,
     sy: 0.1,
     sz: WALL_THICKNESS * 2.2,
-    x: 0,
-    z: BASIN_HALF_SIZE.y + WALL_THICKNESS * 0.5,
   },
   {
-    sx: BASIN_HALF_SIZE.x * 2.0 + WALL_THICKNESS * 2.4,
+    axis: 'z',
+    sign: -1,
+    sx: BASE_BASIN_HALF_SIZE.x * 2.0 + WALL_THICKNESS * 2.4,
     sy: 0.1,
     sz: WALL_THICKNESS * 2.2,
-    x: 0,
-    z: -BASIN_HALF_SIZE.y - WALL_THICKNESS * 0.5,
   },
   {
+    axis: 'x',
+    sign: 1,
     sx: WALL_THICKNESS * 2.2,
     sy: 0.1,
-    sz: BASIN_HALF_SIZE.y * 2.0 + WALL_THICKNESS * 2.4,
-    x: BASIN_HALF_SIZE.x + WALL_THICKNESS * 0.5,
-    z: 0,
+    sz: BASE_BASIN_HALF_SIZE.y * 2.0 + WALL_THICKNESS * 2.4,
   },
   {
+    axis: 'x',
+    sign: -1,
     sx: WALL_THICKNESS * 2.2,
     sy: 0.1,
-    sz: BASIN_HALF_SIZE.y * 2.0 + WALL_THICKNESS * 2.4,
-    x: -BASIN_HALF_SIZE.x - WALL_THICKNESS * 0.5,
-    z: 0,
+    sz: BASE_BASIN_HALF_SIZE.y * 2.0 + WALL_THICKNESS * 2.4,
   },
-].forEach((cfg) => {
+];
+const rimMeshes = rimConfigs.map((cfg) => {
   const rim = new THREE.Mesh(new THREE.BoxGeometry(cfg.sx, cfg.sy, cfg.sz), rimMaterial);
-  rim.position.set(cfg.x, rimY, cfg.z);
   basinGroup.add(rim);
+  return { mesh: rim, cfg };
 });
 
 const skyGeometry = new THREE.SphereGeometry(400, 32, 16);
@@ -324,6 +371,193 @@ const waterSubsurfaceColor = new THREE.Color();
 const foamSurfaceColor = new THREE.Color();
 const sunDisplayColor = new THREE.Color();
 const fillDisplayColor = new THREE.Color();
+const calmSurfaceState = {
+  waveHeight: 0.0,
+  windSpeed: 0.05,
+};
+const surfaceControlState = {
+  waveHeight: oceanUniforms.u_waveHeight.value,
+  windSpeed: oceanUniforms.u_windSpeed.value,
+  windDir: oceanUniforms.u_windDir.value,
+};
+const surfaceMotionState = {
+  waveHeight: oceanUniforms.u_waveHeight.value,
+  windSpeed: oceanUniforms.u_windSpeed.value,
+  windDir: oceanUniforms.u_windDir.value,
+  waveHalfLife: 3.2,
+  windHalfLife: 2.8,
+};
+
+function getDropMargin() {
+  return Math.min(BASE_DROP_MARGIN * tankScale, basinHalfSize.x - 0.34, basinHalfSize.y - 0.34);
+}
+
+function syncBasinScale() {
+  basinHalfSize.copy(BASE_BASIN_HALF_SIZE).multiplyScalar(tankScale);
+  basinDepth = BASE_BASIN_DEPTH * tankDepthScale;
+  waterDepth = Math.min(Math.max(waterDepthSetting, 0.08), basinDepth);
+  waterSurfaceY = waterDepth - basinDepth;
+  oceanMesh.scale.set(tankScale, 1.0, tankScale);
+  oceanMesh.position.y = waterSurfaceY;
+  basinGroup.scale.set(1.0, tankDepthScale, 1.0);
+  basinBase.scale.set(tankScale, 1.0, tankScale);
+  basinFloor.scale.set(tankScale, 1.0, tankScale);
+
+  wallMaterial.thickness = glassThickness * 6.0;
+  wallMaterial.opacity = THREE.MathUtils.clamp(0.18 + glassThickness * 1.8, 0.16, 0.3);
+
+  for (const { mesh, cfg } of wallMeshes) {
+    if (cfg.axis === 'x') {
+      mesh.scale.set(
+        glassThickness / WALL_THICKNESS,
+        1.0,
+        (basinHalfSize.y * 2.0 + glassThickness) / cfg.sz,
+      );
+      mesh.position.set(cfg.sign * (basinHalfSize.x + glassThickness * 0.5), wallCenterY, 0);
+    } else {
+      mesh.scale.set(
+        (basinHalfSize.x * 2.0 + glassThickness) / cfg.sx,
+        1.0,
+        glassThickness / WALL_THICKNESS,
+      );
+      mesh.position.set(0, wallCenterY, cfg.sign * (basinHalfSize.y + glassThickness * 0.5));
+    }
+  }
+
+  for (const { mesh, cfg } of rimMeshes) {
+    if (cfg.axis === 'x') {
+      mesh.scale.set(
+        glassThickness / WALL_THICKNESS,
+        1.0,
+        (basinHalfSize.y * 2.0 + glassThickness * 2.4) / cfg.sz,
+      );
+      mesh.position.set(cfg.sign * (basinHalfSize.x + glassThickness * 0.5), rimY, 0);
+    } else {
+      mesh.scale.set(
+        (basinHalfSize.x * 2.0 + glassThickness * 2.4) / cfg.sx,
+        1.0,
+        glassThickness / WALL_THICKNESS,
+      );
+      mesh.position.set(0, rimY, cfg.sign * (basinHalfSize.y + glassThickness * 0.5));
+    }
+  }
+
+  oceanUniforms.u_basinHalfSize.value.copy(basinHalfSize);
+  oceanUniforms.u_basinDepth.value = waterDepth;
+  oceanUniforms.u_waterSurfaceY.value = waterSurfaceY;
+  cameraTarget.y = waterSurfaceY * 0.35 + 0.2;
+  updateCamera();
+
+  if (controls && Math.abs(controls.getValue('waterDepth') - waterDepth) > 1e-6) {
+    controls.setValue('waterDepth', waterDepth, false);
+  }
+}
+
+function syncSolverUniforms() {
+  oceanUniforms.u_dynamicHeight.value = waterSolver.texture;
+  oceanUniforms.u_dynamicTexel.value.set(1 / waterSolver.width, 1 / waterSolver.height);
+  oceanUniforms.u_dynamicCellSize.value.set(waterSolver.cellX, waterSolver.cellZ);
+  oceanUniforms.u_localWaveSeconds.value = localWaveSeconds;
+}
+
+function recreateWaterSolver() {
+  waterSolver.texture.dispose();
+  waterSolver = new WaterSurfaceSolver({ resolution: solverResolution, basinHalfSize });
+  syncSolverUniforms();
+  syncSurfaceState();
+}
+
+function syncSurfaceState() {
+  oceanUniforms.u_waveHeight.value = surfaceMotionState.waveHeight;
+  oceanUniforms.u_windSpeed.value = surfaceMotionState.windSpeed;
+  oceanUniforms.u_windDir.value = surfaceMotionState.windDir;
+  waterSolver.setParameters({
+    viscosity,
+    waveHeight: surfaceMotionState.waveHeight,
+    windSpeed: surfaceMotionState.windSpeed,
+  });
+}
+
+function seedWindWaveBurst(waveHeight, windSpeed, windDir) {
+  const waveMix = THREE.MathUtils.clamp(waveHeight / 1.35, 0.0, 1.0);
+  const windMix = THREE.MathUtils.clamp(windSpeed / 8.8, 0.0, 1.0);
+  const intensity = THREE.MathUtils.clamp(waveMix * 0.62 + windMix * 0.38, 0.0, 1.0);
+  if (intensity <= 0.015) return;
+
+  const marginX = basinHalfSize.x - 0.8;
+  const marginZ = basinHalfSize.y - 0.8;
+  const direction = new THREE.Vector2(Math.cos(windDir), Math.sin(windDir)).normalize();
+  const lateral = new THREE.Vector2(-direction.y, direction.x);
+  const alongExtent = Math.abs(direction.x) * marginX + Math.abs(direction.y) * marginZ;
+  const lateralExtent = Math.abs(lateral.x) * marginX + Math.abs(lateral.y) * marginZ;
+  const lineCount = Math.round(THREE.MathUtils.lerp(5, 10, intensity));
+  const rowCount = Math.round(THREE.MathUtils.lerp(2, 4, intensity));
+  const radius = THREE.MathUtils.lerp(0.6, 1.35, intensity);
+  const baseStrength = THREE.MathUtils.lerp(0.16, 0.58, intensity);
+  const frontOffset = alongExtent * 0.72;
+
+  for (let row = 0; row < rowCount; row++) {
+    const rowT = rowCount === 1 ? 0.0 : row / (rowCount - 1);
+    const rowWeight = 1.0 - rowT * 0.3;
+    const alongOffset = -frontOffset + row * radius * 1.6;
+    for (let i = 0; i < lineCount; i++) {
+      const t = lineCount === 1 ? 0.5 : i / (lineCount - 1);
+      const lateralOffset = THREE.MathUtils.lerp(-lateralExtent * 0.94, lateralExtent * 0.94, t);
+      const jitter = (Math.sin((i + 1) * 1.91 + row * 2.37) * 0.5 + 0.5) * radius * 0.18;
+      const x = THREE.MathUtils.clamp(
+        direction.x * alongOffset + lateral.x * lateralOffset + direction.x * jitter,
+        -marginX,
+        marginX,
+      );
+      const z = THREE.MathUtils.clamp(
+        direction.y * alongOffset + lateral.y * lateralOffset + direction.y * jitter,
+        -marginZ,
+        marginZ,
+      );
+      waterSolver.addImpact(x, z, baseStrength * rowWeight, radius);
+    }
+  }
+}
+
+function triggerSurfaceExcitation(options = {}) {
+  const waveHeight = options.waveHeight ?? surfaceControlState.waveHeight;
+  const windSpeed = options.windSpeed ?? surfaceControlState.windSpeed;
+  const windDir = options.windDir ?? surfaceControlState.windDir;
+  const intensity = THREE.MathUtils.clamp(
+    (waveHeight / 1.35) * 0.6 + (windSpeed / 8.8) * 0.4,
+    0.0,
+    1.0,
+  );
+
+  surfaceMotionState.waveHeight = waveHeight;
+  surfaceMotionState.windSpeed = windSpeed;
+  surfaceMotionState.windDir = windDir;
+  surfaceMotionState.waveHalfLife = THREE.MathUtils.lerp(2.8, 8.6, intensity);
+  surfaceMotionState.windHalfLife = THREE.MathUtils.lerp(2.2, 6.6, intensity);
+  syncSurfaceState();
+
+  if (options.seedSolver !== false) {
+    seedWindWaveBurst(waveHeight, windSpeed, windDir);
+  }
+}
+
+function settleSurfaceMotion(dt) {
+  const waveDecay = Math.exp((-Math.LN2 * dt) / Math.max(surfaceMotionState.waveHalfLife, 0.001));
+  const windDecay = Math.exp((-Math.LN2 * dt) / Math.max(surfaceMotionState.windHalfLife, 0.001));
+  surfaceMotionState.waveHeight = calmSurfaceState.waveHeight
+    + (surfaceMotionState.waveHeight - calmSurfaceState.waveHeight) * waveDecay;
+  surfaceMotionState.windSpeed = calmSurfaceState.windSpeed
+    + (surfaceMotionState.windSpeed - calmSurfaceState.windSpeed) * windDecay;
+
+  if (Math.abs(surfaceMotionState.waveHeight - calmSurfaceState.waveHeight) < 0.0002) {
+    surfaceMotionState.waveHeight = calmSurfaceState.waveHeight;
+  }
+  if (Math.abs(surfaceMotionState.windSpeed - calmSurfaceState.windSpeed) < 0.0005) {
+    surfaceMotionState.windSpeed = calmSurfaceState.windSpeed;
+  }
+
+  syncSurfaceState();
+}
 
 function updateOceanPalette() {
   waterSurfaceColor.setHSL(
@@ -374,12 +608,61 @@ function updateOceanPalette() {
   oceanUniforms.u_viscosity.value = viscosity;
   wallReflectivity = lookState.wallReflectivity;
   oceanUniforms.u_wallReflectivity.value = wallReflectivity;
+  syncSurfaceState();
 }
 
 function syncUniform(key, value) {
-  if (key === 'waveHeight') oceanUniforms.u_waveHeight.value = value;
-  if (key === 'windSpeed') oceanUniforms.u_windSpeed.value = value;
-  if (key === 'windDir') oceanUniforms.u_windDir.value = value;
+  if (key === 'waveHeight') surfaceControlState.waveHeight = value;
+  if (key === 'windSpeed') surfaceControlState.windSpeed = value;
+  if (key === 'windDir') {
+    surfaceControlState.windDir = value;
+    surfaceMotionState.windDir = value;
+  }
+  if (key === 'impactHistoryCount') activeImpactHistoryCount = Math.round(value);
+  if (key === 'localWaveSeconds') {
+    localWaveSeconds = value;
+    oceanUniforms.u_localWaveSeconds.value = value;
+  }
+  if (key === 'waterDepth') {
+    waterDepthSetting = value;
+    syncBasinScale();
+    if (simulationReady) clearActions();
+    return;
+  }
+  if (key === 'tankScale') {
+    if (Math.abs(tankScale - value) < 1e-6) return;
+    tankScale = value;
+    syncBasinScale();
+    recreateWaterSolver();
+    if (simulationReady) clearActions();
+    return;
+  }
+  if (key === 'tankDepthScale') {
+    if (Math.abs(tankDepthScale - value) < 1e-6) return;
+    tankDepthScale = value;
+    syncBasinScale();
+    if (simulationReady) clearActions();
+    return;
+  }
+  if (key === 'glassThickness') {
+    if (Math.abs(glassThickness - value) < 1e-6) return;
+    glassThickness = value;
+    syncBasinScale();
+    return;
+  }
+  if (key === 'gridResolution') {
+    const nextResolution = Math.round(value);
+    if (solverResolution !== nextResolution) {
+      solverResolution = nextResolution;
+      recreateWaterSolver();
+      if (simulationReady) clearActions();
+    }
+    return;
+  }
+  if (key === 'dropSize') dropControlState.size = value;
+  if (key === 'dropMass') dropControlState.mass = value;
+  if (key === 'rainRate') rainState.rate = value;
+  if (key === 'rainStrength') rainState.intensity = value;
   if (key === 'sunAngle') sunDir.set(0.5, value, -0.8).normalize();
   if (key === 'viscosity') oceanUniforms.u_viscosity.value = value;
   if (key === 'wallReflectivity') oceanUniforms.u_wallReflectivity.value = value;
@@ -388,10 +671,32 @@ function syncUniform(key, value) {
     lookState[key] = value;
     updateOceanPalette();
   }
+
+  if (key === 'waveHeight' || key === 'windSpeed' || key === 'windDir') {
+    triggerSurfaceExcitation({
+      waveHeight: surfaceControlState.waveHeight,
+      windSpeed: surfaceControlState.windSpeed,
+      windDir: surfaceControlState.windDir,
+      seedSolver: false,
+    });
+    return;
+  }
+
+  syncSurfaceState();
 }
 
-const controls = new Controls({
+const controlSections = {
+  surface: { section: 'Surface', sectionOrder: 1 },
+  tank: { section: 'Tank', sectionOrder: 2 },
+  impacts: { section: 'Impacts & Rain', sectionOrder: 3 },
+  water: { section: 'Water Look', sectionOrder: 4 },
+  light: { section: 'Light', sectionOrder: 5 },
+};
+
+controls = new Controls({
   waveHeight: {
+    ...controlSections.surface,
+    order: 1,
     label: 'Wave Height',
     min: 0.0,
     max: 2.4,
@@ -400,6 +705,8 @@ const controls = new Controls({
     description: '基礎波の高さです。大きくすると常時うねりが強くなり、静かな水面よりも荒れた海面の表情になります。',
   },
   windSpeed: {
+    ...controlSections.surface,
+    order: 2,
     label: 'Wind Speed',
     min: 0.05,
     max: 14,
@@ -408,6 +715,8 @@ const controls = new Controls({
     description: '風で駆動される波の速さと細かさです。上げるほど水面の動きが忙しくなり、落下インパクトが背景の波に埋もれやすくなります。',
   },
   windDir: {
+    ...controlSections.surface,
+    order: 3,
     label: 'Wind Dir',
     min: 0,
     max: Math.PI * 2,
@@ -415,7 +724,29 @@ const controls = new Controls({
     value: 0.18,
     description: '基礎波が流れる向きです。波筋の方向が変わるので、ハイライトや波頭の見え方も変化します。',
   },
+  localWaveSeconds: {
+    ...controlSections.surface,
+    order: 4,
+    label: 'Local Seconds',
+    min: 4,
+    max: 120,
+    step: 1,
+    value: localWaveSeconds,
+    description: '着水点のまわりで解析的に残す局所波の秒数です。長くすると余韻が続きますが、履歴参照の負荷も増えます。',
+  },
+  impactHistoryCount: {
+    ...controlSections.surface,
+    order: 5,
+    label: 'History Count',
+    min: 8,
+    max: 128,
+    step: 1,
+    value: activeImpactHistoryCount,
+    description: '水面計算で参照する impact 履歴の件数です。増やすほど連続着水の影響が残りますが、CPU の計算量も増えます。',
+  },
   sunAngle: {
+    ...controlSections.light,
+    order: 1,
     label: 'Sun Angle',
     min: -0.2,
     max: 1.1,
@@ -424,6 +755,8 @@ const controls = new Controls({
     description: '太陽の高さです。低くすると横からの光になり、反射と陰影が強くなって波の凹凸が目立ちます。',
   },
   viscosity: {
+    ...controlSections.surface,
+    order: 6,
     label: 'Viscosity',
     min: 0.05,
     max: 1.8,
@@ -432,6 +765,8 @@ const controls = new Controls({
     description: '擬似粘度です。高いほど着水後の波紋が早く減衰して広がりも遅くなり、低いほど軽い液体のように長く広がります。',
   },
   wallReflectivity: {
+    ...controlSections.tank,
+    order: 4,
     label: 'Wall Reflect',
     min: 0.0,
     max: 1.2,
@@ -439,7 +774,99 @@ const controls = new Controls({
     value: lookState.wallReflectivity,
     description: '壁面での反射の強さです。高いほど波が槽の端で返ってきて往復し、低いほど壁で吸収されて静かに減衰します。',
   },
+  tankScale: {
+    ...controlSections.tank,
+    order: 1,
+    label: 'Tank Width',
+    min: 0.6,
+    max: 1.8,
+    step: 0.05,
+    value: tankScale,
+    description: '水槽の広さです。大きいほど波が長く伝わり、小さいほど壁反射が早く返ります。変更時はシミュレーションを再初期化します。',
+  },
+  tankDepthScale: {
+    ...controlSections.tank,
+    order: 2,
+    label: 'Tank Depth',
+    min: 0.6,
+    max: 1.8,
+    step: 0.05,
+    value: tankDepthScale,
+    description: '水槽の深さです。深くすると底までの距離が伸び、浅くすると底面の存在感が強くなります。変更時はシミュレーションを再初期化します。',
+  },
+  waterDepth: {
+    ...controlSections.tank,
+    order: 3,
+    label: 'Water Depth',
+    min: 0.08,
+    max: 2.2,
+    step: 0.01,
+    value: waterDepth,
+    description: '実際に水を張る深さです。水槽の深さとは独立に調整でき、槽より深くした場合は槽の深さまでに制限されます。',
+  },
+  glassThickness: {
+    ...controlSections.tank,
+    order: 4,
+    label: 'Glass Thick',
+    min: 0.01,
+    max: 0.12,
+    step: 0.005,
+    value: glassThickness,
+    description: 'ガラス壁の厚みです。水槽の広さとは独立に調整でき、値はそのままメートル相当で扱っています。',
+  },
+  gridResolution: {
+    ...controlSections.tank,
+    order: 5,
+    label: 'Grid Res',
+    min: 64,
+    max: 256,
+    step: 16,
+    value: solverResolution,
+    description: '水面 solver のグリッド解像度です。高いほど細かい波を保持できますが、負荷が上がり、変更時にシミュレーションを再初期化します。',
+  },
+  dropSize: {
+    ...controlSections.impacts,
+    order: 1,
+    label: 'Drop Size',
+    min: 0.4,
+    max: 1.2,
+    step: 0.01,
+    value: dropControlState.size,
+    description: '落下物の見た目サイズです。大きいほど接水面が広がり、波の立ち上がりも広く見えます。',
+  },
+  dropMass: {
+    ...controlSections.impacts,
+    order: 2,
+    label: 'Drop Mass',
+    min: 0.35,
+    max: 1.4,
+    step: 0.01,
+    value: dropControlState.mass,
+    description: '落下物の質量スケールです。重いほど同じサイズでも強い impact を与えます。',
+  },
+  rainRate: {
+    ...controlSections.impacts,
+    order: 4,
+    label: 'Rain Rate',
+    min: 1,
+    max: 40,
+    step: 1,
+    value: rainState.rate,
+    description: '雨モードで 1 秒あたりに落とす雨粒の数です。高いほど水面へ連続的な刺激が入ります。',
+  },
+  rainStrength: {
+    ...controlSections.impacts,
+    order: 5,
+    label: 'Rain Power',
+    min: 0.08,
+    max: 0.5,
+    step: 0.01,
+    value: rainState.intensity,
+    description: '雨粒 1 粒ごとの強さです。上げるほど小さな波紋ではなく、はっきりした連続波になります。',
+  },
   waterHue: {
+    ...controlSections.water,
+    order: 1,
     label: 'Water Hue',
     min: 0.0,
     max: 1.0,
@@ -448,6 +875,8 @@ const controls = new Controls({
     description: '水の色相です。透過色と反射色の基調が変わり、海水、湖水、着色液体のような印象を作れます。',
   },
   waterSaturation: {
+    ...controlSections.water,
+    order: 2,
     label: 'Water Sat',
     min: 0.0,
     max: 1.0,
@@ -456,6 +885,8 @@ const controls = new Controls({
     description: '水の彩度です。高いほど色味が濃くなり、低いほど透明感のある無彩色寄りの表現になります。',
   },
   waterLightness: {
+    ...controlSections.water,
+    order: 3,
     label: 'Water Light',
     min: 0.05,
     max: 0.55,
@@ -464,6 +895,8 @@ const controls = new Controls({
     description: '水の明るさです。上げると浅瀬や透過光が強く見え、下げると深く重い液体の印象になります。',
   },
   sunHue: {
+    ...controlSections.light,
+    order: 2,
     label: 'Sun Hue',
     min: 0.0,
     max: 1.0,
@@ -472,6 +905,8 @@ const controls = new Controls({
     description: '太陽光の色相です。暖色に寄せると夕景、寒色に寄せると曇天や月光寄りの雰囲気になります。',
   },
   sunSaturation: {
+    ...controlSections.light,
+    order: 3,
     label: 'Sun Sat',
     min: 0.0,
     max: 1.0,
@@ -480,6 +915,8 @@ const controls = new Controls({
     description: '太陽光の色味の強さです。上げるほどハイライトに色が乗り、下げると白色光に近づきます。',
   },
   sunIntensity: {
+    ...controlSections.light,
+    order: 4,
     label: 'Sun Intensity',
     min: 0.3,
     max: 2.0,
@@ -488,6 +925,8 @@ const controls = new Controls({
     description: '太陽光の強度です。上げると鏡面反射と水面のきらめきが強くなり、下げると柔らかい照明になります。',
   },
   foamAmount: {
+    ...controlSections.water,
+    order: 4,
     label: 'Foam Amount',
     min: 0.0,
     max: 1.5,
@@ -496,6 +935,8 @@ const controls = new Controls({
     description: '白波の出やすさです。高いほど勾配の強い場所に泡の縁取りが出て、荒れた表情になります。',
   },
   reflectionMix: {
+    ...controlSections.water,
+    order: 5,
     label: 'Reflection',
     min: 0.3,
     max: 1.3,
@@ -504,6 +945,8 @@ const controls = new Controls({
     description: '空の映り込みの強さです。上げると鏡面寄り、下げると水の内部色が見えやすくなります。',
   },
   impactGain: {
+    ...controlSections.impacts,
+    order: 3,
     label: 'Impact Gain',
     min: 0.2,
     max: 2.5,
@@ -512,6 +955,8 @@ const controls = new Controls({
     description: '落下物が作る波紋の初期振幅です。大きいほど着水時の反応が強く、スプラッシュも目立ちます。',
   },
   exposure: {
+    ...controlSections.light,
+    order: 5,
     label: 'Exposure',
     min: 0.6,
     max: 1.8,
@@ -633,20 +1078,12 @@ const presets = {
 let idleOrbitSpeed = presets.nagi.idleOrbit;
 let isDragging = false;
 let previousPointer = { x: 0, y: 0 };
-const spherical = { theta: 0.26, phi: 1.04, radius: 14 };
 
-function updateCamera() {
-  camera.position.set(
-    cameraTarget.x + spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta),
-    cameraTarget.y + spherical.radius * Math.cos(spherical.phi),
-    cameraTarget.z + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta),
-  );
-  camera.lookAt(cameraTarget);
-}
-
+syncBasinScale();
+syncSolverUniforms();
 updateCamera();
 
-function applyPreset(name) {
+function applyPreset(name, options = {}) {
   const preset = presets[name];
   if (!preset) return;
 
@@ -656,13 +1093,19 @@ function applyPreset(name) {
   });
 
   idleOrbitSpeed = preset.idleOrbit;
+  triggerSurfaceExcitation({
+    waveHeight: preset.waveHeight,
+    windSpeed: preset.windSpeed,
+    windDir: preset.windDir,
+    seedSolver: options.seedSolver !== false,
+  });
 
   document.querySelectorAll('[data-preset]').forEach((button) => {
     button.classList.toggle('active', button.dataset.preset === name);
   });
 }
 
-applyPreset('nagi');
+applyPreset('nagi', { seedSolver: false });
 
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
@@ -718,24 +1161,27 @@ document.querySelectorAll('[data-preset]').forEach((button) => {
 
 const dropSpecs = {
   droplet: {
-    makeGeometry: () => new THREE.SphereGeometry(0.18, 18, 18),
-    makeMaterial: () => new THREE.MeshPhysicalMaterial({
+    makeGeometry: (sizeScale) => new THREE.SphereGeometry(0.13 * sizeScale, 16, 16),
+    makeMaterial: (sizeScale) => new THREE.MeshPhysicalMaterial({
       color: waterSurfaceColor.clone().lerp(new THREE.Color(0xffffff), 0.42),
       roughness: 0.08,
       metalness: 0.0,
       transmission: 0.78,
       transparent: true,
       opacity: 0.92,
-      thickness: 1.3,
+      thickness: 0.85 + sizeScale * 0.4,
       clearcoat: 1.0,
       clearcoatRoughness: 0.06,
     }),
-    spawnY: 4.8,
-    impactStrength: 0.34,
+    spawnY: 4.45,
+    impactStrength: 0.24,
     opacity: 0.92,
+    reboundScale: 0.86,
+    fadeRate: 0.5,
+    spinScale: 0.9,
   },
   sphere: {
-    makeGeometry: () => new THREE.SphereGeometry(0.46, 28, 28),
+    makeGeometry: (sizeScale) => new THREE.SphereGeometry(0.34 * sizeScale, 26, 26),
     makeMaterial: () => new THREE.MeshStandardMaterial({
       color: 0xc3cedd,
       roughness: 0.18,
@@ -743,12 +1189,15 @@ const dropSpecs = {
       transparent: true,
       opacity: 0.96,
     }),
-    spawnY: 5.5,
-    impactStrength: 0.56,
+    spawnY: 4.95,
+    impactStrength: 0.4,
     opacity: 0.96,
+    reboundScale: 0.78,
+    fadeRate: 0.42,
+    spinScale: 1.0,
   },
   crate: {
-    makeGeometry: () => new THREE.BoxGeometry(0.8, 0.8, 0.8),
+    makeGeometry: (sizeScale) => new THREE.BoxGeometry(0.56 * sizeScale, 0.56 * sizeScale, 0.56 * sizeScale),
     makeMaterial: () => new THREE.MeshStandardMaterial({
       color: 0x7a5135,
       roughness: 0.76,
@@ -756,9 +1205,12 @@ const dropSpecs = {
       transparent: true,
       opacity: 0.96,
     }),
-    spawnY: 5.6,
-    impactStrength: 0.68,
+    spawnY: 5.05,
+    impactStrength: 0.48,
     opacity: 0.96,
+    reboundScale: 0.72,
+    fadeRate: 0.4,
+    spinScale: 1.08,
   },
 };
 
@@ -767,6 +1219,26 @@ const splashes = [];
 const sheets = [];
 const sprayParticles = [];
 const crowns = [];
+
+function buildDropInstance(type, options = {}) {
+  const spec = dropSpecs[type];
+  if (!spec) return null;
+
+  const sizeScale = (options.sizeScale ?? 1.0) * dropControlState.size;
+  const massScale = (options.massScale ?? 1.0) * dropControlState.mass;
+  const mesh = new THREE.Mesh(spec.makeGeometry(sizeScale), spec.makeMaterial(sizeScale));
+
+  return {
+    mesh,
+    spawnY: options.spawnY ?? (spec.spawnY + sizeScale * 0.45),
+    opacity: options.opacity ?? spec.opacity,
+    impactStrength: spec.impactStrength * Math.max(0.16, massScale) * Math.pow(sizeScale, 1.08),
+    reboundScale: options.reboundScale ?? spec.reboundScale,
+    fadeRate: options.fadeRate ?? spec.fadeRate,
+    spinScale: options.spinScale ?? spec.spinScale,
+    impactOptions: options.impactOptions ?? {},
+  };
+}
 
 function waveHeightAt(x, z, time) {
   const windDir = oceanUniforms.u_windDir.value;
@@ -812,23 +1284,26 @@ function rippleContribution(x, z, sourceX, sourceZ, strength, spatialFreq, rippl
 function impactHeightAt(x, z, time) {
   let height = 0;
   const viscMix = THREE.MathUtils.clamp((viscosity - 0.05) / 1.75, 0, 1);
-  const rippleSpeed = THREE.MathUtils.lerp(9.4, 4.2, viscMix);
-  const spatialFreq = THREE.MathUtils.lerp(6.8, 5.0, viscMix * 0.9);
-  const radialDecay = THREE.MathUtils.lerp(1.18, 1.86, viscMix);
-  const temporalDecay = THREE.MathUtils.lerp(0.98, 2.35, viscMix);
-  const rampTime = THREE.MathUtils.lerp(0.14, 0.22, viscMix);
-  const singleReflectionGain = wallReflectivity * 0.82;
-  const cornerReflectionGain = wallReflectivity * wallReflectivity * 0.68;
+  const rippleSpeed = THREE.MathUtils.lerp(10.4, 6.2, viscMix);
+  const spatialFreq = THREE.MathUtils.lerp(7.4, 5.8, viscMix * 0.9);
+  const radialDecay = THREE.MathUtils.lerp(0.24, 0.54, viscMix);
+  const temporalDecay = THREE.MathUtils.lerp(0.026, 0.075, viscMix);
+  const rampTime = THREE.MathUtils.lerp(0.06, 0.14, viscMix);
+  const singleReflectionGain = wallReflectivity * 0.78;
+  const cornerReflectionGain = wallReflectivity * wallReflectivity * 0.62;
+  const maxAge = localWaveSeconds;
+  const historyCount = Math.max(1, Math.min(MAX_IMPACT_HISTORY, Math.round(activeImpactHistoryCount)));
 
-  for (let i = 0; i < MAX_IMPACTS; i++) {
-    const impact = impactUniforms[i];
+  for (let i = 0; i < historyCount; i++) {
+    const historyIndex = (impactHistoryCursor - 1 - i + MAX_IMPACT_HISTORY) % MAX_IMPACT_HISTORY;
+    const impact = impactHistory[historyIndex];
     const age = time - impact.z;
-    if (age <= 0 || impact.w <= 0.001) continue;
+    if (age <= 0 || age >= maxAge || impact.w <= 0.001) continue;
 
-    const leftX = -2.0 * BASIN_HALF_SIZE.x - impact.x;
-    const rightX = 2.0 * BASIN_HALF_SIZE.x - impact.x;
-    const nearZ = -2.0 * BASIN_HALF_SIZE.y - impact.y;
-    const farZ = 2.0 * BASIN_HALF_SIZE.y - impact.y;
+    const leftX = -2.0 * basinHalfSize.x - impact.x;
+    const rightX = 2.0 * basinHalfSize.x - impact.x;
+    const nearZ = -2.0 * basinHalfSize.y - impact.y;
+    const farZ = 2.0 * basinHalfSize.y - impact.y;
 
     height += rippleContribution(x, z, impact.x, impact.y, impact.w, spatialFreq, rippleSpeed, radialDecay, temporalDecay, rampTime, age);
     height += rippleContribution(x, z, leftX, impact.y, impact.w * singleReflectionGain, spatialFreq, rippleSpeed, radialDecay, temporalDecay, rampTime, age);
@@ -844,7 +1319,10 @@ function impactHeightAt(x, z, time) {
 }
 
 function sampleWaterHeight(x, z, time) {
-  return waveHeightAt(x, z, time) + impactHeightAt(x, z, time);
+  return waterSurfaceY
+    + waveHeightAt(x, z, time)
+    + waterSolver.sampleHeightAt(x, z) * oceanUniforms.u_dynamicGain.value
+    + impactHeightAt(x, z, time);
 }
 
 function addSplash(x, z, y, scale = 1.0) {
@@ -1020,16 +1498,25 @@ function spawnSprayBurst(x, z, y, strength, generation = 0) {
 }
 
 function registerImpact(x, z, time, strength, options = {}) {
-  impactUniforms[impactCursor].set(x, z, time, strength * impactGain);
-  impactCursor = (impactCursor + 1) % MAX_IMPACTS;
   const waterY = sampleWaterHeight(x, z, time);
   const visualScale = options.visualScale ?? 1.0;
   const generation = options.generation ?? 0;
+  const totalStrength = strength * impactGain;
+  const localStrength = totalStrength * 0.34;
+  const solverRadius = THREE.MathUtils.lerp(0.48, 1.2, THREE.MathUtils.clamp(totalStrength / 0.95, 0.0, 1.0))
+    * THREE.MathUtils.clamp(0.8 + visualScale * 0.28, 0.65, 1.18);
+
+  impactHistory[impactHistoryCursor].set(x, z, time, totalStrength);
+  impactHistoryCursor = (impactHistoryCursor + 1) % MAX_IMPACT_HISTORY;
+  impactUniforms[impactCursor].set(x, z, time, localStrength);
+  impactCursor = (impactCursor + 1) % MAX_VISIBLE_IMPACTS;
+  waterSolver.addImpact(x, z, totalStrength * 1.92, solverRadius);
+
   if (options.surfaceRing === true) addSplash(x, z, waterY, visualScale);
   if (options.spray !== false) {
-    spawnWaterSheet(x, z, waterY, strength * impactGain * visualScale, generation);
-    spawnCrownSplash(x, z, waterY, strength * impactGain * visualScale, generation);
-    spawnSprayBurst(x, z, waterY, strength * impactGain * visualScale, generation);
+    spawnWaterSheet(x, z, waterY, totalStrength * visualScale, generation);
+    spawnCrownSplash(x, z, waterY, totalStrength * visualScale, generation);
+    spawnSprayBurst(x, z, waterY, totalStrength * visualScale, generation);
   }
 }
 
@@ -1070,53 +1557,118 @@ function clearActions() {
   }
 
   impactUniforms.forEach((impact) => impact.set(0, 0, -100, 0));
+  impactHistory.forEach((impact) => impact.set(0, 0, -100, 0));
   impactCursor = 0;
+  impactHistoryCursor = 0;
+  setRainEnabled(false);
+  waterSolver.reset();
+  surfaceMotionState.waveHeight = calmSurfaceState.waveHeight;
+  surfaceMotionState.windSpeed = calmSurfaceState.windSpeed;
+  surfaceMotionState.windDir = surfaceControlState.windDir;
+  syncSurfaceState();
 }
 
-function randomSpawnPosition() {
+function randomSpawnPosition(edgeInset = getDropMargin()) {
   return {
-    x: THREE.MathUtils.randFloat(-BASIN_HALF_SIZE.x + DROP_MARGIN, BASIN_HALF_SIZE.x - DROP_MARGIN),
-    z: THREE.MathUtils.randFloat(-BASIN_HALF_SIZE.y + DROP_MARGIN, BASIN_HALF_SIZE.y - DROP_MARGIN),
+    x: THREE.MathUtils.randFloat(-basinHalfSize.x + edgeInset, basinHalfSize.x - edgeInset),
+    z: THREE.MathUtils.randFloat(-basinHalfSize.y + edgeInset, basinHalfSize.y - edgeInset),
   };
 }
 
-function spawnDrop(type) {
-  const spec = dropSpecs[type];
-  if (!spec) return;
+function spawnDrop(type, options = {}) {
+  const instance = buildDropInstance(type, options);
+  if (!instance) return;
 
-  const mesh = new THREE.Mesh(spec.makeGeometry(), spec.makeMaterial());
-  const spawn = randomSpawnPosition();
-  mesh.position.set(
+  const spawn = options.position ?? randomSpawnPosition(options.edgeInset);
+  instance.mesh.position.set(
     spawn.x,
-    spec.spawnY,
+    instance.spawnY,
     spawn.z,
   );
-  mesh.rotation.set(
-    Math.random() * Math.PI,
-    Math.random() * Math.PI,
-    Math.random() * Math.PI,
+  instance.mesh.rotation.set(
+    Math.random() * Math.PI * instance.spinScale,
+    Math.random() * Math.PI * instance.spinScale,
+    Math.random() * Math.PI * instance.spinScale,
   );
-  dropGroup.add(mesh);
+  dropGroup.add(instance.mesh);
 
   drops.push({
-    mesh,
+    mesh: instance.mesh,
     velocityY: 0,
     spin: new THREE.Vector3(
-      THREE.MathUtils.randFloat(0.4, 1.1),
-      THREE.MathUtils.randFloat(0.5, 1.4),
-      THREE.MathUtils.randFloat(0.3, 1.0),
+      THREE.MathUtils.randFloat(0.4, 1.1) * instance.spinScale,
+      THREE.MathUtils.randFloat(0.5, 1.4) * instance.spinScale,
+      THREE.MathUtils.randFloat(0.3, 1.0) * instance.spinScale,
     ),
     impacted: false,
-    opacity: spec.opacity,
-    impactStrength: spec.impactStrength,
+    opacity: instance.opacity,
+    impactStrength: instance.impactStrength,
+    reboundScale: instance.reboundScale,
+    fadeRate: instance.fadeRate,
+    impactOptions: instance.impactOptions,
   });
 }
+
+const rainButton = document.querySelector('[data-drop="rain"]');
+
+function updateRainButton() {
+  if (!rainButton) return;
+  rainButton.textContent = rainState.enabled ? 'Rain Stop' : 'Rain Start';
+  rainButton.classList.toggle('active', rainState.enabled);
+}
+
+function setRainEnabled(enabled) {
+  rainState.enabled = enabled;
+  rainState.accumulator = 0;
+  updateRainButton();
+}
+
+function toggleRain() {
+  setRainEnabled(!rainState.enabled);
+}
+
+function spawnRainDrop() {
+  const normalized = THREE.MathUtils.clamp((rainState.intensity - 0.08) / 0.42, 0.0, 1.0);
+  spawnDrop('droplet', {
+    sizeScale: THREE.MathUtils.lerp(0.4, 0.72, normalized),
+    massScale: THREE.MathUtils.lerp(0.35, 0.78, normalized),
+    spawnY: THREE.MathUtils.lerp(5.2, 6.4, normalized),
+    edgeInset: Math.max(0.24, getDropMargin() * 0.45),
+    fadeRate: 0.88,
+    reboundScale: 0.18,
+    spinScale: 0.45,
+    impactOptions: {
+      spray: false,
+      surfaceRing: false,
+      visualScale: THREE.MathUtils.lerp(0.22, 0.42, normalized),
+    },
+  });
+}
+
+function updateRain(dt) {
+  if (!rainState.enabled) return;
+
+  rainState.accumulator += dt * rainState.rate;
+  let spawnBudget = 0;
+  while (rainState.accumulator >= 1.0 && spawnBudget < 10) {
+    rainState.accumulator -= 1.0;
+    spawnRainDrop();
+    spawnBudget += 1;
+  }
+}
+
+updateRainButton();
+simulationReady = true;
 
 document.querySelectorAll('[data-drop]').forEach((button) => {
   button.addEventListener('click', () => {
     const type = button.dataset.drop;
     if (type === 'clear') {
       clearActions();
+      return;
+    }
+    if (type === 'rain') {
+      toggleRain();
       return;
     }
     spawnDrop(type);
@@ -1132,6 +1684,7 @@ window.addEventListener('keydown', (event) => {
   if (event.key === 'q' || event.key === 'Q') spawnDrop('droplet');
   if (event.key === 'w' || event.key === 'W') spawnDrop('sphere');
   if (event.key === 'e' || event.key === 'E') spawnDrop('crate');
+  if (event.key === 't' || event.key === 'T') toggleRain();
   if (event.key === 'r' || event.key === 'R') clearActions();
 });
 
@@ -1148,18 +1701,18 @@ function updateDrops(time, dt) {
       const waterHeight = sampleWaterHeight(drop.mesh.position.x, drop.mesh.position.z, time);
       if (drop.mesh.position.y <= waterHeight + 0.04) {
         drop.impacted = true;
-        registerImpact(drop.mesh.position.x, drop.mesh.position.z, time, drop.impactStrength);
+        registerImpact(drop.mesh.position.x, drop.mesh.position.z, time, drop.impactStrength, drop.impactOptions);
         drop.mesh.position.y = waterHeight - 0.02;
-        drop.velocityY = -0.6 - drop.impactStrength * 0.8;
+        drop.velocityY = (-0.38 - drop.impactStrength * 0.68) * drop.reboundScale;
       }
       continue;
     }
 
     drop.mesh.position.y += drop.velocityY * dt;
     drop.velocityY -= 1.2 * dt;
-    drop.opacity = Math.max(0, drop.opacity - dt * 0.42);
+    drop.opacity = Math.max(0, drop.opacity - dt * drop.fadeRate);
     drop.mesh.material.opacity = drop.opacity;
-    if (drop.opacity <= 0.02 || drop.mesh.position.y < -BASIN_DEPTH - 1.4) {
+    if (drop.opacity <= 0.02 || drop.mesh.position.y < -basinDepth - 1.4) {
       dropGroup.remove(drop.mesh);
       disposeObject(drop.mesh);
       drops.splice(i, 1);
@@ -1224,8 +1777,8 @@ function updateCrowns(dt) {
 }
 
 function updateSprayParticles(time, dt) {
-  const wallX = BASIN_HALF_SIZE.x - 0.06;
-  const wallZ = BASIN_HALF_SIZE.y - 0.06;
+  const wallX = basinHalfSize.x - 0.06;
+  const wallZ = basinHalfSize.y - 0.06;
 
   for (let i = sprayParticles.length - 1; i >= 0; i--) {
     const particle = sprayParticles[i];
@@ -1280,7 +1833,7 @@ function updateSprayParticles(time, dt) {
       }
     }
 
-    if (particle.remainingReentries <= 0 || fade <= 0.0 || particle.mesh.position.y < -BASIN_DEPTH - 0.8) {
+    if (particle.remainingReentries <= 0 || fade <= 0.0 || particle.mesh.position.y < -basinDepth - 0.8) {
       sprayGroup.remove(particle.mesh);
       disposeObject(particle.mesh);
       sprayParticles.splice(i, 1);
@@ -1301,16 +1854,19 @@ function loop() {
     updateCamera();
   }
 
+  settleSurfaceMotion(dt);
   oceanUniforms.u_time.value = elapsed;
   oceanUniforms.u_cameraPos.value.copy(camera.position);
   sunLight.position.copy(sunDir).multiplyScalar(18.0);
   sunLight.target.position.copy(cameraTarget);
 
+  updateRain(dt);
   updateDrops(elapsed, dt);
   updateSplashes(dt);
   updateSheets(dt);
   updateCrowns(dt);
   updateSprayParticles(elapsed, dt);
+  waterSolver.step(dt);
 
   renderer.render(scene, camera);
   stats.update();

@@ -120,7 +120,45 @@ export class Controls {
     this._helpTitle = helpTitle;
     this._helpBody = helpBody;
 
-    for (const [key, cfg] of Object.entries(params)) {
+    const sortedEntries = Object.entries(params).sort(([, a], [, b]) => {
+      const sectionOrderA = a.sectionOrder ?? Number.MAX_SAFE_INTEGER;
+      const sectionOrderB = b.sectionOrder ?? Number.MAX_SAFE_INTEGER;
+      if (sectionOrderA !== sectionOrderB) return sectionOrderA - sectionOrderB;
+
+      const itemOrderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const itemOrderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      if (itemOrderA !== itemOrderB) return itemOrderA - itemOrderB;
+
+      return 0;
+    });
+
+    let activeSection = null;
+
+    for (const [key, cfg] of sortedEntries) {
+      if (cfg.section && cfg.section !== activeSection) {
+        activeSection = cfg.section;
+
+        const section = document.createElement('div');
+        Object.assign(section.style, {
+          margin: body.children.length ? '16px 0 10px' : '0 0 10px',
+          paddingTop: body.children.length ? '12px' : '0',
+          borderTop: body.children.length ? '1px solid rgba(140, 170, 255, 0.12)' : 'none',
+        });
+
+        const sectionLabel = document.createElement('div');
+        sectionLabel.textContent = cfg.section;
+        Object.assign(sectionLabel.style, {
+          color: '#eef4ff',
+          fontSize: '10px',
+          fontWeight: '700',
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+        });
+
+        section.appendChild(sectionLabel);
+        body.appendChild(section);
+      }
+
       const row = document.createElement('div');
       row.style.marginBottom = '10px';
 

@@ -16,6 +16,7 @@ uniform vec3 u_foamTint;
 uniform float u_foamAmount;
 uniform float u_reflectionMix;
 uniform float u_basinDepth;
+uniform float u_waterSurfaceY;
 uniform float u_waterClarity;
 uniform float u_absorption;
 
@@ -77,7 +78,7 @@ void main() {
   float spec = pow(max(dot(normal, halfDir), 0.0), 256.0);
   vec3 sunSpec = u_sunColor * spec * 8.0;
 
-  float depth = clamp((-v_worldPos.y + u_basinDepth) / max(u_basinDepth, 0.001), 0.0, 1.0);
+  float depth = clamp((u_waterSurfaceY - v_worldPos.y + u_basinDepth) / max(u_basinDepth, 0.001), 0.0, 1.0);
   float absorb = exp(-depth * mix(3.8, 1.35, u_waterClarity) * u_absorption);
   vec3 transmittedColor = mix(u_deepColor, u_shallowColor, absorb);
   vec3 waterColor = mix(transmittedColor, u_deepColor, clamp(depth * 0.22, 0.0, 1.0));
