@@ -25,44 +25,62 @@
   </header>
 
   <main class="sim-main">
-    <section class="sim-stage" id="viewport">
-      <canvas id="canvas"></canvas>
-
-      <div class="headline">
-        <strong>Glossy Liquid Sheet</strong>
-        <span>屈折、集光模様、液膜の厚みを調整しながら、立体感のあるインクの流れを確認できます。</span>
-      </div>
-
-      <div id="leftDock">
-        <div class="dockGroup">
-          <div class="dockLabel">Scenes</div>
-          <div id="scenes">
-            <button data-scene="sheet">Sheet</button>
-            <button data-scene="drop">Drop</button>
-            <button data-scene="bubble">Bubble</button>
-          </div>
-        </div>
-
-        <div class="dockGroup">
-          <div class="dockLabel">Palette</div>
-          <div id="palette"></div>
-        </div>
-
-        <div class="dockGroup">
-          <div class="dockLabel">Actions</div>
-          <div id="actions">
-            <button id="toolToggle">Tool: Paint</button>
-            <button id="viewToggle">View: Ink</button>
-            <button id="resetButton">Reset Scene</button>
-          </div>
+    <section class="sim-page-card">
+      <div class="sim-section-heading">
+        <h2>液膜として見るインクの流れ</h2>
+        <p class="sim-card-lead">
+          成果物ページの落ち着いた紹介トーンを維持しながら、内部では屈折や集光模様を伴う液膜表現を表示しています。シーン、色、ツールを切り替えつつ、右側のパネルで膜厚や反射の見え方まで詰められます。
+        </p>
+        <div class="sim-chip-row">
+          <span class="sim-chip">Glossy Ink Surface</span>
+          <span class="sim-chip">Refraction &amp; Caustics</span>
+          <span class="sim-chip">Paint &amp; Bubble Tool</span>
         </div>
       </div>
 
-      <div id="info">
-        左ドラッグで液体を描き、右ドラッグで視点を回転、ホイールで拡大縮小できます。<strong>1 / 2 / 3</strong> でシーン切替、<strong>B</strong> で気泡ツール、<strong>V</strong> で速度表示、<strong>R</strong> でリセットです。右側のパネルでは膜厚、屈折、視線角反射、集光模様などを調整できます。
+      <div class="sim-stage" id="viewport">
+        <canvas id="canvas"></canvas>
+
+        <div class="headline">
+          <strong>Glossy Liquid Sheet</strong>
+          <span>屈折、集光模様、液膜の厚みを調整しながら、立体感のあるインクの流れを確認できます。</span>
+        </div>
+
+        <div id="leftDock">
+          <div class="dockGroup">
+            <div class="dockLabel">Scenes</div>
+            <div id="scenes">
+              <button data-scene="sheet">Sheet</button>
+              <button data-scene="drop">Drop</button>
+              <button data-scene="bubble">Bubble</button>
+            </div>
+          </div>
+
+          <div class="dockGroup">
+            <div class="dockLabel">Palette</div>
+            <div id="palette"></div>
+          </div>
+
+          <div class="dockGroup">
+            <div class="dockLabel">Actions</div>
+            <div id="actions">
+              <button id="toolToggle">Tool: Paint</button>
+              <button id="viewToggle">View: Ink</button>
+              <button id="resetButton">Reset Scene</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="info">
+          左ドラッグで液体を描き、右ドラッグで視点を回転、ホイールで拡大縮小できます。<strong>1 / 2 / 3</strong> でシーン切替、<strong>B</strong> で気泡ツール、<strong>V</strong> で速度表示、<strong>R</strong> でリセットです。右側のパネルでは膜厚、屈折、視線角反射、集光模様などを調整できます。
+        </div>
       </div>
     </section>
   </main>
+
+  <footer class="sim-footer">
+    <p>&copy; 2026 Sunmax Engineering. Fluid Simulation Portfolio.</p>
+  </footer>
 
   <script>
     if (!window.location.pathname.includes('/fluid-simulation/')) {
