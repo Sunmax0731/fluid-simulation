@@ -1,18 +1,18 @@
 body.ink-page {
   --sim-accent: #637fe8;
-  --sim-accent-dark: #3c57bf;
+  --sim-accent-dark: #b8c4ff;
   --sim-stage-bg:
-    radial-gradient(ellipse at 50% 0%, rgba(158, 168, 255, 0.18), transparent 45%),
-    radial-gradient(ellipse at 24% 16%, rgba(95, 170, 255, 0.12), transparent 38%),
+    radial-gradient(ellipse at 50% 0%, rgba(158, 168, 255, 0.16), transparent 45%),
+    radial-gradient(ellipse at 24% 16%, rgba(95, 170, 255, 0.11), transparent 38%),
     linear-gradient(180deg, #0a0c14 0%, #03050a 100%);
-  --sim-panel: rgba(251, 252, 255, 0.92);
-  --sim-panel-soft: rgba(243, 246, 255, 0.95);
+  --sim-panel: rgba(23, 24, 48, 0.88);
+  --sim-panel-soft: rgba(16, 18, 38, 0.92);
   --sim-line: rgba(99, 127, 232, 0.22);
-  --sim-text: #222a3b;
-  --sim-muted: #50607c;
-  --sim-button-bg: rgba(243, 246, 255, 0.97);
+  --sim-text: #eef1ff;
+  --sim-muted: #b6bfdc;
+  --sim-button-bg: rgba(16, 19, 40, 0.9);
   --sim-button-hover: #637fe8;
-  --sim-button-text: #222a3b;
+  --sim-button-text: #eef1ff;
   --sim-info-width: 700px;
 }
 

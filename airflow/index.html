@@ -8,82 +8,92 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body class="sim-page ocean-page">
-  <header class="site-header">
-    <div class="header-inner">
-      <nav class="site-nav" aria-label="Simulation navigation">
-        <a id="siteTopLink" href="../../index.html">Top Page</a>
-        <a href="../airflow/" class="active">Ocean Surface</a>
-        <a href="../liquid/">Smoke &amp; Fire</a>
-        <a href="../multiphase/">Ink Flow</a>
-      </nav>
-      <p class="sim-kicker">Fluid Simulation</p>
-      <h1>Ocean Surface</h1>
-      <p class="tagline">
-        透明感のある水槽内で、静かな水面から雨や落下物までを連続的に観察できる三次元の水面シミュレーションです。
-      </p>
-    </div>
-  </header>
+  <nav class="site-nav" aria-label="グローバルナビゲーション">
+    <a id="siteTopLink" href="../../index.html" class="nav-brand">
+      <span class="brand-icon">🌊</span>
+      <span>流体シミュレーション</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../airflow/" class="active">Ocean Surface</a></li>
+      <li><a href="../liquid/">Smoke &amp; Fire</a></li>
+      <li><a href="../multiphase/">Ink Flow</a></li>
+    </ul>
+  </nav>
 
-  <main class="sim-main">
-    <section class="sim-page-card">
-      <div class="sim-section-heading">
-        <h2>水槽内の水面シミュレーション</h2>
-        <p class="sim-card-lead">
-          成果物ページと同じトーンで見られるように、明るい紹介カードの中にシミュレーション画面を配置しています。凪の状態から雨や落下物を加え、水面の広がり、壁反射、水しぶきまで一つの画面で確認できます。
+  <div class="page-wrapper">
+    <section class="section-hero">
+      <div class="hero-bg-text">WATER</div>
+      <div class="container">
+        <div class="breadcrumb">
+          <a id="heroTopLink" href="../../index.html">ホーム</a><span class="sep">›</span>
+          <span class="current">Ocean Surface</span>
+        </div>
+        <span class="domain-badge">Fluid / Ocean Surface</span>
+        <h1 class="hero-title">Ocean Surface</h1>
+        <p class="hero-copy">
+          透明感のある水槽内で、静かな水面から雨や落下物までを連続的に観察できる三次元の水面シミュレーションです。
         </p>
-        <div class="sim-chip-row">
-          <span class="sim-chip">3D Water Tank</span>
-          <span class="sim-chip">Wall Reflection</span>
-          <span class="sim-chip">Rain &amp; Impact</span>
-        </div>
       </div>
+    </section>
 
-      <div class="sim-stage" id="viewport">
-        <canvas id="canvas"></canvas>
-
-        <div class="headline">
-          <strong>Live Water Tank</strong>
-          <span>壁反射、雨、落下物、水しぶきまで含めて三次元で観察できる水槽シーンです。</span>
-        </div>
-
-        <div id="leftDock">
-          <div class="dockGroup">
-            <div class="dockLabel">Presets</div>
-            <div id="presets">
-              <button data-preset="nagi">Nagi</button>
-              <button data-preset="glass">Glass</button>
-              <button data-preset="swell">Swell</button>
-              <button data-preset="storm">Storm</button>
-              <button data-preset="sunset">Sunset</button>
-            </div>
+    <section class="section alt">
+      <div class="container">
+        <div class="viz-card">
+          <h3>水槽内の水面シミュレーション</h3>
+          <p>
+            凪の状態から雨や落下物を加え、水面の広がり、壁反射、水しぶきまで一つの画面で確認できます。成果物ページと同じく、紹介文とデモ本体を分けた構成にしています。
+          </p>
+          <div class="feature-badges">
+            <span class="feature-badge">3D Water Tank</span>
+            <span class="feature-badge">Wall Reflection</span>
+            <span class="feature-badge">Rain &amp; Impact</span>
           </div>
 
-          <div class="dockGroup">
-            <div class="dockLabel">Actions</div>
-            <div id="actions">
-              <button data-drop="droplet">Water Drop</button>
-              <button data-drop="sphere">Metal Sphere</button>
-              <button data-drop="crate">Crate</button>
-              <button data-drop="rain">Rain Start</button>
-              <button data-drop="clear">Clear</button>
+          <div class="sim-stage" id="viewport">
+            <canvas id="canvas"></canvas>
+
+            <div class="headline">
+              <strong>Live Water Tank</strong>
+              <span>壁反射、雨、落下物、水しぶきまで含めて三次元で観察できる水槽シーンです。</span>
+            </div>
+
+            <div id="leftDock">
+              <div class="dockGroup">
+                <div class="dockLabel">Presets</div>
+                <div id="presets">
+                  <button data-preset="nagi">Nagi</button>
+                  <button data-preset="glass">Glass</button>
+                  <button data-preset="swell">Swell</button>
+                  <button data-preset="storm">Storm</button>
+                  <button data-preset="sunset">Sunset</button>
+                </div>
+              </div>
+
+              <div class="dockGroup">
+                <div class="dockLabel">Actions</div>
+                <div id="actions">
+                  <button data-drop="droplet">Water Drop</button>
+                  <button data-drop="sphere">Metal Sphere</button>
+                  <button data-drop="crate">Crate</button>
+                  <button data-drop="rain">Rain Start</button>
+                  <button data-drop="clear">Clear</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="info">
+              ドラッグで視点回転、ホイールで拡大縮小できます。<strong>Nagi</strong> で凪の状態を作ったあとに <strong>Water Drop</strong> や <strong>Rain</strong> を使うと、後天的な衝撃による波の広がりと壁反射を観察しやすくなります。キー操作は <strong>1 - 5</strong> がプリセット、<strong>Q / W / E</strong> が落下物、<strong>T</strong> が雨、<strong>R</strong> がリセットです。
             </div>
           </div>
-        </div>
-
-        <div id="info">
-          ドラッグで視点回転、ホイールで拡大縮小できます。プリセットは初期のうねりだけを与えて静まるので、<strong>Nagi</strong> で凪の状態を作ったあとに <strong>Water Drop</strong> や <strong>Rain</strong> を使うと、後天的な衝撃による波の広がりと壁反射を観察しやすくなります。キー操作は <strong>1 - 5</strong> がプリセット、<strong>Q / W / E</strong> が落下物、<strong>T</strong> が雨、<strong>R</strong> がリセットです。
         </div>
       </div>
     </section>
-  </main>
-
-  <footer class="sim-footer">
-    <p>&copy; 2026 Sunmax Engineering. Fluid Simulation Portfolio.</p>
-  </footer>
+  </div>
 
   <script>
     if (!window.location.pathname.includes('/fluid-simulation/')) {
       document.getElementById('siteTopLink').hidden = true;
+      document.getElementById('heroTopLink').hidden = true;
     }
   </script>
   <script type="module" src="./main.js"></script>

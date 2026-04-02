@@ -31,11 +31,11 @@ export class Controls {
       scrollbarWidth: 'thin',
       padding: '14px 16px',
       borderRadius: '18px',
-      border: '1px solid rgba(74, 143, 212, 0.18)',
-      background: 'rgba(255, 255, 255, 0.92)',
-      boxShadow: '0 14px 30px rgba(90, 74, 0, 0.16)',
+      border: '1px solid rgba(64, 160, 224, 0.22)',
+      background: 'rgba(26, 26, 53, 0.94)',
+      boxShadow: '0 14px 30px rgba(0, 0, 0, 0.34)',
       backdropFilter: 'blur(16px)',
-      color: '#334155',
+      color: '#e8e8f8',
       fontFamily: '"Segoe UI", "Hiragino Sans", sans-serif',
       fontSize: '12px',
       zIndex: '9999',
@@ -66,9 +66,9 @@ export class Controls {
     toggle.type = 'button';
     toggle.textContent = 'Hide';
     Object.assign(toggle.style, {
-      border: '1px solid rgba(74, 143, 212, 0.18)',
-      background: 'rgba(255, 248, 220, 0.96)',
-      color: '#2c2c2c',
+      border: '1px solid rgba(64, 160, 224, 0.22)',
+      background: 'rgba(18, 18, 42, 0.96)',
+      color: '#dfe7ff',
       borderRadius: '999px',
       padding: '5px 10px',
       fontSize: '10px',
@@ -85,8 +85,8 @@ export class Controls {
       toggle.style.transform = 'translateY(-1px)';
     });
     toggle.addEventListener('mouseleave', () => {
-      toggle.style.background = 'rgba(255, 248, 220, 0.96)';
-      toggle.style.color = '#2c2c2c';
+      toggle.style.background = 'rgba(18, 18, 42, 0.96)';
+      toggle.style.color = '#dfe7ff';
       toggle.style.transform = 'translateY(0)';
     });
     toggle.addEventListener('click', () => this.setCollapsed(!this._collapsed));
@@ -106,9 +106,9 @@ export class Controls {
       marginTop: '14px',
       padding: '10px 12px',
       borderRadius: '14px',
-      border: '1px solid rgba(74, 143, 212, 0.14)',
-      background: 'rgba(255, 248, 220, 0.96)',
-      boxShadow: '0 10px 24px rgba(90, 74, 0, 0.12)',
+      border: '1px solid rgba(64, 160, 224, 0.14)',
+      background: 'rgba(18, 18, 42, 0.96)',
+      boxShadow: '0 10px 24px rgba(0, 0, 0, 0.24)',
     });
 
     const helpTitle = document.createElement('div');
@@ -124,7 +124,7 @@ export class Controls {
 
     const helpBody = document.createElement('div');
     Object.assign(helpBody.style, {
-      color: '#5b6475',
+      color: '#aab4d8',
       lineHeight: '1.55',
       fontSize: '11px',
       whiteSpace: 'normal',
@@ -158,7 +158,7 @@ export class Controls {
         Object.assign(section.style, {
           margin: body.children.length ? '16px 0 10px' : '0 0 10px',
           paddingTop: body.children.length ? '12px' : '0',
-          borderTop: body.children.length ? '1px solid rgba(240, 232, 192, 0.95)' : 'none',
+          borderTop: body.children.length ? '1px solid rgba(42, 42, 80, 0.95)' : 'none',
         });
 
         const sectionLabel = document.createElement('div');
@@ -188,7 +188,7 @@ export class Controls {
 
       const nameEl = document.createElement('span');
       nameEl.textContent = cfg.label || key;
-      nameEl.style.color = '#415166';
+      nameEl.style.color = '#b3c0e6';
 
       const valueEl = document.createElement('span');
       valueEl.style.color = options.accent || '#4a8fd4';

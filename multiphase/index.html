@@ -8,83 +8,93 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body class="sim-page ink-page">
-  <header class="site-header">
-    <div class="header-inner">
-      <nav class="site-nav" aria-label="Simulation navigation">
-        <a id="siteTopLink" href="../../index.html">Top Page</a>
-        <a href="../airflow/">Ocean Surface</a>
-        <a href="../liquid/">Smoke &amp; Fire</a>
-        <a href="../multiphase/" class="active">Ink Flow</a>
-      </nav>
-      <p class="sim-kicker">Fluid Simulation</p>
-      <h1>Ink Flow</h1>
-      <p class="tagline">
-        絵の具の膜、気泡を削る操作、光の屈折まで含めて、艶のある液膜表現を三次元で確認できるインクシミュレーションです。
-      </p>
-    </div>
-  </header>
+  <nav class="site-nav" aria-label="グローバルナビゲーション">
+    <a id="siteTopLink" href="../../index.html" class="nav-brand">
+      <span class="brand-icon">🫧</span>
+      <span>流体シミュレーション</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../airflow/">Ocean Surface</a></li>
+      <li><a href="../liquid/">Smoke &amp; Fire</a></li>
+      <li><a href="../multiphase/" class="active">Ink Flow</a></li>
+    </ul>
+  </nav>
 
-  <main class="sim-main">
-    <section class="sim-page-card">
-      <div class="sim-section-heading">
-        <h2>液膜として見るインクの流れ</h2>
-        <p class="sim-card-lead">
-          成果物ページの落ち着いた紹介トーンを維持しながら、内部では屈折や集光模様を伴う液膜表現を表示しています。シーン、色、ツールを切り替えつつ、右側のパネルで膜厚や反射の見え方まで詰められます。
+  <div class="page-wrapper">
+    <section class="section-hero">
+      <div class="hero-bg-text">INK</div>
+      <div class="container">
+        <div class="breadcrumb">
+          <a id="heroTopLink" href="../../index.html">ホーム</a><span class="sep">›</span>
+          <span class="current">Ink Flow</span>
+        </div>
+        <span class="domain-badge">Fluid / Ink Flow</span>
+        <h1 class="hero-title">Ink Flow</h1>
+        <p class="hero-copy">
+          絵の具の膜、気泡を削る操作、光の屈折まで含めて、艶のある液膜表現を三次元で確認できるインクシミュレーションです。
         </p>
-        <div class="sim-chip-row">
-          <span class="sim-chip">Glossy Ink Surface</span>
-          <span class="sim-chip">Refraction &amp; Caustics</span>
-          <span class="sim-chip">Paint &amp; Bubble Tool</span>
-        </div>
       </div>
+    </section>
 
-      <div class="sim-stage" id="viewport">
-        <canvas id="canvas"></canvas>
+    <section class="section alt">
+      <div class="container">
+        <div class="viz-card">
+          <h3>液膜として見るインクの流れ</h3>
+          <p>
+            屈折や集光模様を伴う液膜表現を表示しながら、シーン、色、ツールを切り替えて挙動を確認できます。膜厚や反射の見え方まで右側のパネルで詰められます。
+          </p>
+          <div class="feature-badges">
+            <span class="feature-badge">Glossy Ink Surface</span>
+            <span class="feature-badge">Refraction &amp; Caustics</span>
+            <span class="feature-badge">Paint &amp; Bubble Tool</span>
+          </div>
 
-        <div class="headline">
-          <strong>Glossy Liquid Sheet</strong>
-          <span>屈折、集光模様、液膜の厚みを調整しながら、立体感のあるインクの流れを確認できます。</span>
-        </div>
+          <div class="sim-stage" id="viewport">
+            <canvas id="canvas"></canvas>
 
-        <div id="leftDock">
-          <div class="dockGroup">
-            <div class="dockLabel">Scenes</div>
-            <div id="scenes">
-              <button data-scene="sheet">Sheet</button>
-              <button data-scene="drop">Drop</button>
-              <button data-scene="bubble">Bubble</button>
+            <div class="headline">
+              <strong>Glossy Liquid Sheet</strong>
+              <span>屈折、集光模様、液膜の厚みを調整しながら、立体感のあるインクの流れを確認できます。</span>
+            </div>
+
+            <div id="leftDock">
+              <div class="dockGroup">
+                <div class="dockLabel">Scenes</div>
+                <div id="scenes">
+                  <button data-scene="sheet">Sheet</button>
+                  <button data-scene="drop">Drop</button>
+                  <button data-scene="bubble">Bubble</button>
+                </div>
+              </div>
+
+              <div class="dockGroup">
+                <div class="dockLabel">Palette</div>
+                <div id="palette"></div>
+              </div>
+
+              <div class="dockGroup">
+                <div class="dockLabel">Actions</div>
+                <div id="actions">
+                  <button id="toolToggle">Tool: Paint</button>
+                  <button id="viewToggle">View: Ink</button>
+                  <button id="resetButton">Reset Scene</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="info">
+              左ドラッグで液体を描き、右ドラッグで視点を回転、ホイールで拡大縮小できます。<strong>1 / 2 / 3</strong> でシーン切替、<strong>B</strong> で気泡ツール、<strong>V</strong> で速度表示、<strong>R</strong> でリセットです。右側のパネルでは膜厚、屈折、視線角反射、集光模様などを調整できます。
             </div>
           </div>
-
-          <div class="dockGroup">
-            <div class="dockLabel">Palette</div>
-            <div id="palette"></div>
-          </div>
-
-          <div class="dockGroup">
-            <div class="dockLabel">Actions</div>
-            <div id="actions">
-              <button id="toolToggle">Tool: Paint</button>
-              <button id="viewToggle">View: Ink</button>
-              <button id="resetButton">Reset Scene</button>
-            </div>
-          </div>
-        </div>
-
-        <div id="info">
-          左ドラッグで液体を描き、右ドラッグで視点を回転、ホイールで拡大縮小できます。<strong>1 / 2 / 3</strong> でシーン切替、<strong>B</strong> で気泡ツール、<strong>V</strong> で速度表示、<strong>R</strong> でリセットです。右側のパネルでは膜厚、屈折、視線角反射、集光模様などを調整できます。
         </div>
       </div>
     </section>
-  </main>
-
-  <footer class="sim-footer">
-    <p>&copy; 2026 Sunmax Engineering. Fluid Simulation Portfolio.</p>
-  </footer>
+  </div>
 
   <script>
     if (!window.location.pathname.includes('/fluid-simulation/')) {
       document.getElementById('siteTopLink').hidden = true;
+      document.getElementById('heroTopLink').hidden = true;
     }
   </script>
   <script type="module" src="./main.js"></script>

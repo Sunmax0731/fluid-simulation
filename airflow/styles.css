@@ -1,18 +1,18 @@
 body.ocean-page {
-  --sim-accent: #4a8fd4;
-  --sim-accent-dark: #2e6fbf;
+  --sim-accent: #4aa4e0;
+  --sim-accent-dark: #8bd5ff;
   --sim-stage-bg:
-    radial-gradient(ellipse at 50% 0%, rgba(170, 220, 255, 0.18), transparent 48%),
-    radial-gradient(ellipse at 20% 18%, rgba(120, 190, 255, 0.12), transparent 42%),
-    linear-gradient(180deg, #0b2536 0%, #07131d 100%);
-  --sim-panel: rgba(255, 255, 255, 0.92);
-  --sim-panel-soft: rgba(255, 248, 220, 0.94);
-  --sim-line: rgba(74, 143, 212, 0.2);
-  --sim-text: #2c2c2c;
-  --sim-muted: #4d6177;
-  --sim-button-bg: rgba(255, 248, 220, 0.96);
-  --sim-button-hover: #4a8fd4;
-  --sim-button-text: #2c2c2c;
+    radial-gradient(ellipse at 50% 0%, rgba(117, 196, 255, 0.16), transparent 48%),
+    radial-gradient(ellipse at 20% 18%, rgba(63, 134, 255, 0.12), transparent 42%),
+    linear-gradient(180deg, #06131e 0%, #030910 100%);
+  --sim-panel: rgba(20, 28, 48, 0.88);
+  --sim-panel-soft: rgba(15, 21, 40, 0.92);
+  --sim-line: rgba(74, 164, 224, 0.24);
+  --sim-text: #e8f4ff;
+  --sim-muted: #b2c7da;
+  --sim-button-bg: rgba(14, 20, 36, 0.9);
+  --sim-button-hover: #4aa4e0;
+  --sim-button-text: #e8f4ff;
   --sim-info-width: 720px;
 }
 

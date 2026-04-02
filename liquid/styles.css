@@ -1,18 +1,18 @@
 body.smoke-page {
   --sim-accent: #d9853b;
-  --sim-accent-dark: #a65817;
+  --sim-accent-dark: #ffc185;
   --sim-stage-bg:
-    radial-gradient(ellipse at 50% 0%, rgba(255, 181, 106, 0.18), transparent 44%),
-    radial-gradient(ellipse at 18% 18%, rgba(255, 120, 70, 0.12), transparent 38%),
+    radial-gradient(ellipse at 50% 0%, rgba(255, 181, 106, 0.16), transparent 44%),
+    radial-gradient(ellipse at 18% 18%, rgba(255, 120, 70, 0.11), transparent 38%),
     linear-gradient(180deg, #120d0c 0%, #050608 100%);
-  --sim-panel: rgba(255, 251, 244, 0.92);
-  --sim-panel-soft: rgba(255, 246, 232, 0.94);
+  --sim-panel: rgba(29, 22, 28, 0.88);
+  --sim-panel-soft: rgba(20, 16, 24, 0.92);
   --sim-line: rgba(217, 133, 59, 0.22);
-  --sim-text: #2d241f;
-  --sim-muted: #5d4c43;
-  --sim-button-bg: rgba(255, 246, 232, 0.96);
+  --sim-text: #fff3ea;
+  --sim-muted: #d3b9a5;
+  --sim-button-bg: rgba(28, 20, 20, 0.9);
   --sim-button-hover: #d9853b;
-  --sim-button-text: #2d241f;
+  --sim-button-text: #fff3ea;
   --sim-info-width: 680px;
 }
 
