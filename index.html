@@ -4,13 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fluid Motion Lab</title>
+  <script>
+    const deployPathPattern = /\/fluid-simulation(?:\/index\.html)?\/?$/;
+    if (deployPathPattern.test(window.location.pathname)) {
+      window.location.replace('../fluid-simulation.html');
+    }
+  </script>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <div class="page-links">
-    <a id="projectBackLink" class="page-link" href="../fluid-simulation.html">&lt;- Project Top</a>
-  </div>
-
   <main>
     <section class="hero">
       <span class="eyebrow">Realtime Visual FX Playground</span>
@@ -96,11 +98,6 @@
   </main>
 
   <script>
-    const projectBackLink = document.getElementById('projectBackLink');
-    if (!window.location.pathname.includes('/fluid-simulation/')) {
-      projectBackLink.hidden = true;
-    }
-
     const badge = document.getElementById('gpuBadge');
 
     async function updateBadge() {

@@ -28,7 +28,7 @@ canvas {
 
 .headline {
   position: fixed;
-  top: 18px;
+  top: 92px;
   left: 50%;
   transform: translateX(-50%);
   display: grid;
@@ -42,13 +42,44 @@ canvas {
   pointer-events: none;
 }
 
-.topLinks {
+.simHeader {
   position: fixed;
   top: 18px;
-  left: 16px;
-  display: flex;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(980px, calc(100vw - 32px));
+  z-index: 5;
+}
+
+.simNav {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
-  z-index: 4;
+}
+
+.simNav a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+  backdrop-filter: blur(14px);
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.simNav a:hover,
+.simNav a.active {
+  transform: translateY(-2px);
+  border-color: rgba(156, 168, 255, 0.52);
+  background: rgba(37, 38, 61, 0.84);
 }
 
 .headline strong {
@@ -61,21 +92,6 @@ canvas {
 .headline span {
   color: var(--muted);
   font-size: 0.9rem;
-}
-
-.topLinks a {
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  color: var(--text);
-  text-decoration: none;
-  font-size: 0.82rem;
-  backdrop-filter: blur(12px);
-}
-
-#projectTop[hidden] {
-  display: none;
 }
 
 #leftDock {
@@ -166,7 +182,7 @@ button.active {
 
 #info {
   position: fixed;
-  top: 110px;
+  top: 164px;
   left: 50%;
   transform: translateX(-50%);
   padding: 12px 16px;
@@ -191,22 +207,24 @@ button.active {
 }
 
 @media (max-width: 720px) {
+  .simHeader {
+    top: 12px;
+    width: calc(100vw - 24px);
+  }
+
+  .simNav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .headline {
-    top: 66px;
-    width: calc(100vw - 96px);
+    top: 126px;
+    width: calc(100vw - 24px);
   }
 
   #leftDock {
     left: 12px;
     bottom: 12px;
     max-height: calc(100vh - 126px);
-  }
-
-  .topLinks {
-    left: 12px;
-    top: 12px;
-    flex-wrap: wrap;
-    max-width: calc(100vw - 24px);
   }
 
   #scenes button,
@@ -216,7 +234,7 @@ button.active {
   }
 
   #info {
-    top: 108px;
+    top: 220px;
     bottom: auto;
     left: auto;
     right: 12px;
