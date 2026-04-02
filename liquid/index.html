@@ -41,7 +41,7 @@
         <div class="viz-card">
           <h3>煙と炎の立体ボリューム表現</h3>
           <p>
-            三種類の見え方を切り替えながら、内部では三次元の煙と炎をそのまま表示します。密度、自己陰影、立ち上がり方、空気感まで右側の調整パネルで細かく変更できます。
+            三種類の見え方を切り替えながら、内部では三次元の煙と炎をそのまま表示します。3D 表示領域の外側に説明、切替、詳細パラメータを分離しています。
           </p>
           <div class="feature-badges">
             <span class="feature-badge">3D Density Grid</span>
@@ -49,33 +49,43 @@
             <span class="feature-badge">Interactive Plume</span>
           </div>
 
-          <div class="sim-stage" id="viewport">
-            <canvas id="canvas"></canvas>
+          <div class="sim-layout">
+            <aside class="sim-sidebar sim-sidebar-left">
+              <div class="sim-info-card">
+                <strong>Volumetric Plume</strong>
+                <p>三種類の表現を切り替えながら、厚みのある煙と炎を三次元ボリュームで観察できます。</p>
+              </div>
 
-            <div class="headline">
-              <strong>Volumetric Plume</strong>
-              <span>三種類の表現を切り替えながら、厚みのある煙と炎を三次元ボリュームで観察できます。</span>
-            </div>
+              <div id="leftDock">
+                <div class="dockGroup">
+                  <div class="dockLabel">Looks</div>
+                  <div id="looks">
+                    <button data-look="campfire">Campfire</button>
+                    <button data-look="mist">Mist</button>
+                    <button data-look="thruster">Thruster</button>
+                  </div>
+                </div>
 
-            <div id="leftDock">
-              <div class="dockGroup">
-                <div class="dockLabel">Looks</div>
-                <div id="looks">
-                  <button data-look="campfire">Campfire</button>
-                  <button data-look="mist">Mist</button>
-                  <button data-look="thruster">Thruster</button>
+                <div class="dockGroup">
+                  <div class="dockLabel">Current</div>
+                  <div id="status">Look: <span id="lookName">Campfire</span></div>
                 </div>
               </div>
 
-              <div class="dockGroup">
-                <div class="dockLabel">Current</div>
-                <div id="status">Look: <span id="lookName">Campfire</span></div>
+              <div class="sim-note">
+                左ドラッグで煙や炎を注入し、右ドラッグで視点を回転、ホイールで拡大縮小できます。<strong>1 / 2 / 3</strong> で表現を切り替え、<strong>R</strong> で初期化します。右側のパネルでは密度、自己陰影、立ち上がり方、空気感を細かく調整できます。
+              </div>
+            </aside>
+
+            <div class="sim-stage-wrap">
+              <div class="sim-stage" id="viewport">
+                <canvas id="canvas"></canvas>
               </div>
             </div>
 
-            <div id="info">
-              左ドラッグで煙や炎を注入し、右ドラッグで視点を回転、ホイールで拡大縮小できます。<strong>1 / 2 / 3</strong> で表現を切り替え、<strong>R</strong> で初期化します。右側のパネルでは密度、自己陰影、立ち上がり方、空気感を細かく調整できます。
-            </div>
+            <aside class="sim-sidebar sim-sidebar-right">
+              <div id="controlsMount"></div>
+            </aside>
           </div>
         </div>
       </div>

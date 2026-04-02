@@ -62,6 +62,7 @@ function createGridSize(width, height) {
 
 const canvas = document.getElementById('canvas');
 const viewport = document.getElementById('viewport');
+const controlsMount = document.getElementById('controlsMount');
 
 function getViewportSize() {
   const rect = viewport.getBoundingClientRect();
@@ -117,7 +118,7 @@ function resizeViewport() {
 
 updateCamera();
 
-const stats = new StatsPanel();
+const stats = new StatsPanel({ visible: false });
 const lookName = document.getElementById('lookName');
 const clock = new THREE.Clock();
 
@@ -610,7 +611,7 @@ const controls = new Controls({
 }, handleControl, {
   title: 'Volume Controls',
   accent: '#ffb56a',
-  anchor: viewport,
+  mount: controlsMount,
 });
 
 const looks = {

@@ -2,7 +2,6 @@
   --bg-primary: #0d0d1a;
   --bg-secondary: #12122a;
   --bg-card: #1a1a35;
-  --bg-card-hover: #22224a;
   --border: #2a2a50;
   --text-primary: #e8e8f8;
   --text-secondary: #9090b8;
@@ -10,21 +9,18 @@
   --sim-accent: #40a0e0;
   --sim-accent-dark: #77c2f0;
   --sim-stage-bg: linear-gradient(180deg, #08141d 0%, #03080e 100%);
-  --sim-panel: rgba(26, 26, 53, 0.88);
-  --sim-panel-soft: rgba(18, 18, 42, 0.92);
+  --sim-panel: rgba(26, 26, 53, 0.9);
   --sim-line: rgba(64, 160, 224, 0.24);
   --sim-text: #e8e8f8;
   --sim-muted: #b7b7d6;
   --sim-button-bg: rgba(20, 20, 42, 0.88);
   --sim-button-hover: #40a0e0;
   --sim-button-text: #e8e8f8;
-  --sim-info-width: 640px;
   --space-sm: 0.5rem;
   --space-md: 1rem;
   --space-lg: 1.5rem;
   --space-xl: 2rem;
   --space-2xl: 3rem;
-  --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 20px;
 }
@@ -80,7 +76,7 @@ a {
 }
 
 .nav-brand .brand-icon {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
 }
 
 .nav-links {
@@ -111,13 +107,13 @@ a {
 }
 
 .container {
-  max-width: 1100px;
+  max-width: 1180px;
   margin: 0 auto;
   padding: 0 var(--space-xl);
 }
 
 .section-hero {
-  min-height: 42vh;
+  min-height: 40vh;
   display: flex;
   align-items: center;
   padding: var(--space-2xl) 0;
@@ -214,7 +210,7 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.2rem;
 }
 
 .feature-badge {
@@ -229,13 +225,62 @@ a {
   font-weight: 700;
 }
 
+.sim-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 300px;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.sim-sidebar {
+  display: grid;
+  gap: var(--space-md);
+  align-content: start;
+}
+
+.sim-info-card {
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--sim-line);
+  background: var(--sim-panel);
+}
+
+.sim-info-card strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--sim-accent-dark);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sim-info-card p,
+.sim-note {
+  color: var(--sim-muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.sim-note {
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--sim-line);
+  background: rgba(18, 18, 42, 0.82);
+}
+
+.sim-stage-wrap {
+  min-width: 0;
+}
+
 .sim-stage {
   position: relative;
-  min-height: clamp(620px, 72vh, 860px);
+  min-height: clamp(620px, 68vh, 860px);
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--border);
   background: var(--sim-stage-bg);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .sim-stage::after {
@@ -256,55 +301,14 @@ canvas {
   touch-action: none;
 }
 
-.headline {
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: grid;
-  gap: 4px;
-  width: min(560px, calc(100% - 220px));
-  padding: 14px 18px;
-  border-radius: 16px;
-  border: 1px solid var(--sim-line);
-  background: var(--sim-panel);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
-  text-align: center;
-  pointer-events: none;
-  z-index: 3;
-}
-
-.headline strong {
-  color: var(--sim-accent-dark);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.headline span {
-  color: var(--sim-muted);
-  font-size: 0.9rem;
-}
-
 #leftDock {
-  position: absolute;
-  left: 18px;
-  bottom: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-height: calc(100% - 36px);
-  overflow-y: auto;
-  padding-right: 4px;
-  z-index: 3;
+  display: grid;
+  gap: var(--space-md);
 }
 
 .dockGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
+  display: grid;
+  gap: 0.55rem;
 }
 
 .dockLabel {
@@ -317,28 +321,26 @@ canvas {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  justify-self: start;
 }
 
 #presets,
 #actions,
 #looks,
 #scenes {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 8px;
-  align-items: flex-start;
 }
 
 #leftDock button:not(.swatch),
 #status {
-  min-width: 156px;
+  width: 100%;
   padding: 10px 14px;
   border-radius: 12px;
   border: 1px solid var(--sim-line);
   background: var(--sim-button-bg);
   color: var(--sim-button-text);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
 }
 
 #leftDock button:not(.swatch) {
@@ -371,6 +373,7 @@ canvas {
   border: 1px solid var(--sim-line);
   background: var(--sim-panel);
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
+  justify-content: start;
 }
 
 .swatch {
@@ -387,22 +390,18 @@ canvas {
   box-shadow: 0 0 0 2px var(--sim-accent-dark);
 }
 
-#info {
-  position: absolute;
-  top: 98px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(var(--sim-info-width), calc(100% - 240px));
-  padding: 12px 16px;
-  border-radius: 16px;
-  border: 1px solid var(--sim-line);
-  background: var(--sim-panel-soft);
-  color: var(--sim-muted);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
-  font-size: 0.84rem;
-  text-align: center;
-  pointer-events: none;
-  z-index: 3;
+#controlsMount {
+  width: 100%;
+}
+
+@media (max-width: 1120px) {
+  .sim-layout {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .sim-sidebar-right {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 980px) {
@@ -412,10 +411,6 @@ canvas {
 
   .nav-links {
     gap: 1rem;
-  }
-
-  .hero-bg-text {
-    font-size: min(24vw, 10rem);
   }
 }
 
@@ -433,12 +428,8 @@ canvas {
     padding: 0 1rem;
   }
 
-  .headline {
-    width: calc(100% - 40px);
-  }
-
-  #info {
-    width: calc(100% - 40px);
+  .sim-layout {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -453,7 +444,7 @@ canvas {
   }
 
   .section-hero {
-    min-height: 36vh;
+    min-height: 34vh;
     padding: 2rem 0;
   }
 
@@ -466,27 +457,6 @@ canvas {
   }
 
   .sim-stage {
-    min-height: 760px;
-  }
-
-  .headline {
-    top: 12px;
-    width: calc(100% - 24px);
-  }
-
-  #leftDock {
-    left: 12px;
-    bottom: 12px;
-  }
-
-  #leftDock button:not(.swatch),
-  #status {
-    min-width: 132px;
-    padding: 9px 12px;
-  }
-
-  #info {
-    top: 122px;
-    width: calc(100% - 24px);
+    min-height: 560px;
   }
 }

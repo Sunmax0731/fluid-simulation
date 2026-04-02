@@ -15,11 +15,33 @@ export class Controls {
     this._topOffset = options.topOffset ?? 184;
     this._rightOffset = options.rightOffset ?? 18;
     this._minWidth = options.minWidth ?? 236;
+    this._mount = options.mount || null;
+    this._embedded = Boolean(this._mount);
 
     const panel = document.createElement('div');
     this.panel = panel;
 
-    Object.assign(panel.style, {
+    Object.assign(panel.style, this._embedded ? {
+      position: 'sticky',
+      top: '0',
+      width: '100%',
+      minWidth: '0',
+      maxWidth: '100%',
+      maxHeight: 'calc(100vh - 120px)',
+      overflowY: 'auto',
+      overscrollBehavior: 'contain',
+      scrollbarWidth: 'thin',
+      padding: '14px 16px',
+      borderRadius: '18px',
+      border: '1px solid rgba(64, 160, 224, 0.22)',
+      background: 'rgba(26, 26, 53, 0.94)',
+      boxShadow: '0 14px 30px rgba(0, 0, 0, 0.34)',
+      backdropFilter: 'blur(16px)',
+      color: '#e8e8f8',
+      fontFamily: '"Segoe UI", "Hiragino Sans", sans-serif',
+      fontSize: '12px',
+      zIndex: '1',
+    } : {
       position: 'fixed',
       top: `${this._topOffset}px`,
       right: `${this._rightOffset}px`,
@@ -235,12 +257,15 @@ export class Controls {
       toggle.style.display = 'none';
     }
 
-    document.body.appendChild(panel);
-
-    this._applyLayout = this._applyLayout.bind(this);
-    window.addEventListener('resize', this._applyLayout);
-    window.addEventListener('scroll', this._applyLayout, { passive: true });
-    this._applyLayout();
+    if (this._mount) {
+      this._mount.appendChild(panel);
+    } else {
+      document.body.appendChild(panel);
+      this._applyLayout = this._applyLayout.bind(this);
+      window.addEventListener('resize', this._applyLayout);
+      window.addEventListener('scroll', this._applyLayout, { passive: true });
+      this._applyLayout();
+    }
   }
 
   setValue(key, value, emit = false) {
@@ -264,7 +289,7 @@ export class Controls {
     this.panel.style.overflowY = collapsed ? 'hidden' : 'auto';
     this.panel.style.minWidth = collapsed ? 'auto' : `${this._minWidth}px`;
     this._toggle.textContent = collapsed ? 'Show' : 'Hide';
-    this._applyLayout();
+    if (!this._embedded) this._applyLayout();
   }
 
   _formatValue(cfg, value) {

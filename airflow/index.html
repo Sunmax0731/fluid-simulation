@@ -41,7 +41,7 @@
         <div class="viz-card">
           <h3>水槽内の水面シミュレーション</h3>
           <p>
-            凪の状態から雨や落下物を加え、水面の広がり、壁反射、水しぶきまで一つの画面で確認できます。成果物ページと同じく、紹介文とデモ本体を分けた構成にしています。
+            凪の状態から雨や落下物を加え、水面の広がり、壁反射、水しぶきまでを一つの画面で確認できます。3D 表示領域の外側にメニューと説明を分け、観察しやすい構成にしています。
           </p>
           <div class="feature-badges">
             <span class="feature-badge">3D Water Tank</span>
@@ -49,41 +49,51 @@
             <span class="feature-badge">Rain &amp; Impact</span>
           </div>
 
-          <div class="sim-stage" id="viewport">
-            <canvas id="canvas"></canvas>
+          <div class="sim-layout">
+            <aside class="sim-sidebar sim-sidebar-left">
+              <div class="sim-info-card">
+                <strong>Live Water Tank</strong>
+                <p>壁反射、雨、落下物、水しぶきまで含めて三次元で観察できる水槽シーンです。</p>
+              </div>
 
-            <div class="headline">
-              <strong>Live Water Tank</strong>
-              <span>壁反射、雨、落下物、水しぶきまで含めて三次元で観察できる水槽シーンです。</span>
-            </div>
+              <div id="leftDock">
+                <div class="dockGroup">
+                  <div class="dockLabel">Presets</div>
+                  <div id="presets">
+                    <button data-preset="nagi">Nagi</button>
+                    <button data-preset="glass">Glass</button>
+                    <button data-preset="swell">Swell</button>
+                    <button data-preset="storm">Storm</button>
+                    <button data-preset="sunset">Sunset</button>
+                  </div>
+                </div>
 
-            <div id="leftDock">
-              <div class="dockGroup">
-                <div class="dockLabel">Presets</div>
-                <div id="presets">
-                  <button data-preset="nagi">Nagi</button>
-                  <button data-preset="glass">Glass</button>
-                  <button data-preset="swell">Swell</button>
-                  <button data-preset="storm">Storm</button>
-                  <button data-preset="sunset">Sunset</button>
+                <div class="dockGroup">
+                  <div class="dockLabel">Actions</div>
+                  <div id="actions">
+                    <button data-drop="droplet">Water Drop</button>
+                    <button data-drop="sphere">Metal Sphere</button>
+                    <button data-drop="crate">Crate</button>
+                    <button data-drop="rain">Rain Start</button>
+                    <button data-drop="clear">Clear</button>
+                  </div>
                 </div>
               </div>
 
-              <div class="dockGroup">
-                <div class="dockLabel">Actions</div>
-                <div id="actions">
-                  <button data-drop="droplet">Water Drop</button>
-                  <button data-drop="sphere">Metal Sphere</button>
-                  <button data-drop="crate">Crate</button>
-                  <button data-drop="rain">Rain Start</button>
-                  <button data-drop="clear">Clear</button>
-                </div>
+              <div class="sim-note">
+                ドラッグで視点回転、ホイールで拡大縮小できます。<strong>Nagi</strong> で凪の状態を作ったあとに <strong>Water Drop</strong> や <strong>Rain</strong> を使うと、後天的な衝撃による波の広がりと壁反射を観察しやすくなります。キー操作は <strong>1 - 5</strong> がプリセット、<strong>Q / W / E</strong> が落下物、<strong>T</strong> が雨、<strong>R</strong> がリセットです。
+              </div>
+            </aside>
+
+            <div class="sim-stage-wrap">
+              <div class="sim-stage" id="viewport">
+                <canvas id="canvas"></canvas>
               </div>
             </div>
 
-            <div id="info">
-              ドラッグで視点回転、ホイールで拡大縮小できます。<strong>Nagi</strong> で凪の状態を作ったあとに <strong>Water Drop</strong> や <strong>Rain</strong> を使うと、後天的な衝撃による波の広がりと壁反射を観察しやすくなります。キー操作は <strong>1 - 5</strong> がプリセット、<strong>Q / W / E</strong> が落下物、<strong>T</strong> が雨、<strong>R</strong> がリセットです。
-            </div>
+            <aside class="sim-sidebar sim-sidebar-right">
+              <div id="controlsMount"></div>
+            </aside>
           </div>
         </div>
       </div>

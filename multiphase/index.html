@@ -41,7 +41,7 @@
         <div class="viz-card">
           <h3>液膜として見るインクの流れ</h3>
           <p>
-            屈折や集光模様を伴う液膜表現を表示しながら、シーン、色、ツールを切り替えて挙動を確認できます。膜厚や反射の見え方まで右側のパネルで詰められます。
+            屈折や集光模様を伴う液膜表現を表示しながら、シーン、色、ツールを切り替えて挙動を確認できます。3D 表示領域の外側に説明とメニューを配置しています。
           </p>
           <div class="feature-badges">
             <span class="feature-badge">Glossy Ink Surface</span>
@@ -49,42 +49,52 @@
             <span class="feature-badge">Paint &amp; Bubble Tool</span>
           </div>
 
-          <div class="sim-stage" id="viewport">
-            <canvas id="canvas"></canvas>
+          <div class="sim-layout">
+            <aside class="sim-sidebar sim-sidebar-left">
+              <div class="sim-info-card">
+                <strong>Glossy Liquid Sheet</strong>
+                <p>屈折、集光模様、液膜の厚みを調整しながら、立体感のあるインクの流れを確認できます。</p>
+              </div>
 
-            <div class="headline">
-              <strong>Glossy Liquid Sheet</strong>
-              <span>屈折、集光模様、液膜の厚みを調整しながら、立体感のあるインクの流れを確認できます。</span>
-            </div>
+              <div id="leftDock">
+                <div class="dockGroup">
+                  <div class="dockLabel">Scenes</div>
+                  <div id="scenes">
+                    <button data-scene="sheet">Sheet</button>
+                    <button data-scene="drop">Drop</button>
+                    <button data-scene="bubble">Bubble</button>
+                  </div>
+                </div>
 
-            <div id="leftDock">
-              <div class="dockGroup">
-                <div class="dockLabel">Scenes</div>
-                <div id="scenes">
-                  <button data-scene="sheet">Sheet</button>
-                  <button data-scene="drop">Drop</button>
-                  <button data-scene="bubble">Bubble</button>
+                <div class="dockGroup">
+                  <div class="dockLabel">Palette</div>
+                  <div id="palette"></div>
+                </div>
+
+                <div class="dockGroup">
+                  <div class="dockLabel">Actions</div>
+                  <div id="actions">
+                    <button id="toolToggle">Tool: Paint</button>
+                    <button id="viewToggle">View: Ink</button>
+                    <button id="resetButton">Reset Scene</button>
+                  </div>
                 </div>
               </div>
 
-              <div class="dockGroup">
-                <div class="dockLabel">Palette</div>
-                <div id="palette"></div>
+              <div class="sim-note">
+                左ドラッグで液体を描き、右ドラッグで視点を回転、ホイールで拡大縮小できます。<strong>1 / 2 / 3</strong> でシーン切替、<strong>B</strong> で気泡ツール、<strong>V</strong> で速度表示、<strong>R</strong> でリセットです。右側のパネルでは膜厚、屈折、視線角反射、集光模様などを調整できます。
               </div>
+            </aside>
 
-              <div class="dockGroup">
-                <div class="dockLabel">Actions</div>
-                <div id="actions">
-                  <button id="toolToggle">Tool: Paint</button>
-                  <button id="viewToggle">View: Ink</button>
-                  <button id="resetButton">Reset Scene</button>
-                </div>
+            <div class="sim-stage-wrap">
+              <div class="sim-stage" id="viewport">
+                <canvas id="canvas"></canvas>
               </div>
             </div>
 
-            <div id="info">
-              左ドラッグで液体を描き、右ドラッグで視点を回転、ホイールで拡大縮小できます。<strong>1 / 2 / 3</strong> でシーン切替、<strong>B</strong> で気泡ツール、<strong>V</strong> で速度表示、<strong>R</strong> でリセットです。右側のパネルでは膜厚、屈折、視線角反射、集光模様などを調整できます。
-            </div>
+            <aside class="sim-sidebar sim-sidebar-right">
+              <div id="controlsMount"></div>
+            </aside>
           </div>
         </div>
       </div>

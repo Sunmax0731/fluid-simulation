@@ -65,6 +65,7 @@ function colorFromArray(values) {
 
 const canvas = document.getElementById('canvas');
 const viewport = document.getElementById('viewport');
+const controlsMount = document.getElementById('controlsMount');
 
 function getViewportSize() {
   const rect = viewport.getBoundingClientRect();
@@ -138,7 +139,7 @@ function resizeViewport() {
 
 updateCamera();
 
-const stats = new StatsPanel();
+const stats = new StatsPanel({ visible: false });
 
 let brushRadius = 26;
 let currentScene = 'sheet';
@@ -743,7 +744,7 @@ const controls = new Controls({
   title: 'Ink Controls',
   accent: '#9ea8ff',
   helpText: 'スライダーへカーソルを重ねると、シミュレーションと見た目にどのような影響を与えるかを日本語で表示します。',
-  anchor: viewport,
+  mount: controlsMount,
 });
 
 const paletteRoot = document.getElementById('palette');

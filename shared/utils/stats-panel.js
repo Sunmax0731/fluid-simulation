@@ -1,5 +1,6 @@
 export class StatsPanel {
-  constructor() {
+  constructor(options = {}) {
+    this.visible = options.visible ?? true;
     this.el = document.createElement('div');
     Object.assign(this.el.style, {
       position: 'fixed',
@@ -18,6 +19,7 @@ export class StatsPanel {
       pointerEvents: 'none',
       zIndex: '9999',
       backdropFilter: 'blur(14px)',
+      display: this.visible ? 'block' : 'none',
     });
     document.body.appendChild(this.el);
 
@@ -36,6 +38,7 @@ export class StatsPanel {
   }
 
   update() {
+    if (!this.visible) return;
     this._frames++;
     const now = performance.now();
 

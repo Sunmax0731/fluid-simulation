@@ -56,6 +56,7 @@ function copyColorToVector(color, vector) {
 
 const canvas = document.getElementById('canvas');
 const viewport = document.getElementById('viewport');
+const controlsMount = document.getElementById('controlsMount');
 
 function getViewportSize() {
   const rect = viewport.getBoundingClientRect();
@@ -366,7 +367,7 @@ scene.add(sprayGroup);
 const crownGroup = new THREE.Group();
 scene.add(crownGroup);
 
-const stats = new StatsPanel();
+const stats = new StatsPanel({ visible: false });
 
 const lookState = {
   waterHue: 0.53,
@@ -986,7 +987,7 @@ controls = new Controls({
   title: 'Ocean Tuning',
   accent: '#4a8fd4',
   helpText: '各スライダーにカーソルを合わせると、その値がシミュレーションの見た目や挙動に与える影響を日本語で表示します。',
-  anchor: viewport,
+  mount: controlsMount,
 });
 
 Object.entries(controls.values).forEach(([key, value]) => syncUniform(key, value));
