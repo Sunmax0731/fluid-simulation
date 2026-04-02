@@ -4,47 +4,59 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Smoke &amp; Fire</title>
+  <link rel="stylesheet" href="../shared/ui/site-shell.css" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
-<body>
-  <canvas id="canvas"></canvas>
-
-  <header class="simHeader">
-    <nav class="simNav" aria-label="Simulation navigation">
-      <a id="siteTopLink" href="../../index.html">トップページ</a>
-      <a href="../airflow/">Ocean Surface</a>
-      <a href="../liquid/" class="active">Smoke &amp; Fire</a>
-      <a href="../multiphase/">Ink Flow</a>
-    </nav>
+<body class="sim-page smoke-page">
+  <header class="site-header">
+    <div class="header-inner">
+      <nav class="site-nav" aria-label="Simulation navigation">
+        <a id="siteTopLink" href="../../index.html">Top Page</a>
+        <a href="../airflow/">Ocean Surface</a>
+        <a href="../liquid/" class="active">Smoke &amp; Fire</a>
+        <a href="../multiphase/">Ink Flow</a>
+      </nav>
+      <p class="sim-kicker">Fluid Simulation</p>
+      <h1>Smoke &amp; Fire</h1>
+      <p class="tagline">
+        たき火、霧、噴射炎の見え方を切り替えながら、三次元の密度ボリュームとして煙と炎の表現を観察できるページです。
+      </p>
+    </div>
   </header>
 
-  <div class="headline">
-    <strong>Smoke &amp; Fire</strong>
-    <span>3D plume presentation for campfire, mist, and thruster-style realtime FX</span>
-  </div>
-  <div id="leftDock">
-    <div class="dockGroup">
-      <div class="dockLabel">Looks</div>
-      <div id="looks">
-        <button data-look="campfire">Campfire</button>
-        <button data-look="mist">Mist</button>
-        <button data-look="thruster">Thruster</button>
+  <main class="sim-main">
+    <section class="sim-stage" id="viewport">
+      <canvas id="canvas"></canvas>
+
+      <div class="headline">
+        <strong>Volumetric Plume</strong>
+        <span>三種類の表現を切り替えながら、厚みのある煙と炎を三次元ボリュームで観察できます。</span>
       </div>
-    </div>
 
-    <div class="dockGroup">
-      <div class="dockLabel">Current</div>
-      <div id="status">Look: <span id="lookName">Campfire</span></div>
-    </div>
-  </div>
+      <div id="leftDock">
+        <div class="dockGroup">
+          <div class="dockLabel">Looks</div>
+          <div id="looks">
+            <button data-look="campfire">Campfire</button>
+            <button data-look="mist">Mist</button>
+            <button data-look="thruster">Thruster</button>
+          </div>
+        </div>
 
-  <div id="info">
-    Left drag injects plumes. Right drag orbits the camera. Wheel zooms. Keys: <strong>1 / 2 / 3</strong> switch looks, <strong>R</strong> resets.
-  </div>
+        <div class="dockGroup">
+          <div class="dockLabel">Current</div>
+          <div id="status">Look: <span id="lookName">Campfire</span></div>
+        </div>
+      </div>
+
+      <div id="info">
+        左ドラッグで煙や炎を注入し、右ドラッグで視点を回転、ホイールで拡大縮小できます。<strong>1 / 2 / 3</strong> で表現を切り替え、<strong>R</strong> で初期化します。右側のパネルでは密度、自己陰影、立ち上がり方、空気感を細かく調整できます。
+      </div>
+    </section>
+  </main>
 
   <script>
-    const deployed = window.location.pathname.includes('/fluid-simulation/');
-    if (!deployed) {
+    if (!window.location.pathname.includes('/fluid-simulation/')) {
       document.getElementById('siteTopLink').hidden = true;
     }
   </script>

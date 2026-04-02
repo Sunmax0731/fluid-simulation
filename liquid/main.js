@@ -41,14 +41,14 @@ window.addEventListener('unhandledrejection', (event) => {
   showFatalError(reason);
 });
 
-function createInputSize(maxDim = 720) {
+function createInputSize(size, maxDim = 720) {
   const dpr = Math.min(window.devicePixelRatio || 1, 1.2);
-  const longest = Math.max(window.innerWidth, window.innerHeight);
+  const longest = Math.max(size.width, size.height);
   const scale = Math.min(1, maxDim / longest) * dpr;
 
   return {
-    width: Math.max(360, Math.round(window.innerWidth * scale)),
-    height: Math.max(360, Math.round(window.innerHeight * scale)),
+    width: Math.max(360, Math.round(size.width * scale)),
+    height: Math.max(360, Math.round(size.height * scale)),
   };
 }
 
@@ -61,6 +61,16 @@ function createGridSize(width, height) {
 }
 
 const canvas = document.getElementById('canvas');
+const viewport = document.getElementById('viewport');
+
+function getViewportSize() {
+  const rect = viewport.getBoundingClientRect();
+  return {
+    width: Math.max(360, Math.round(rect.width || window.innerWidth)),
+    height: Math.max(420, Math.round(rect.height || window.innerHeight)),
+  };
+}
+
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 if (!renderer.capabilities.isWebGL2) {
   throw new Error('WebGL2 is required for the smoke demo.');
@@ -68,11 +78,12 @@ if (!renderer.capabilities.isWebGL2) {
 
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-renderer.setSize(window.innerWidth, window.innerHeight);
+const initialViewportSize = getViewportSize();
+renderer.setSize(initialViewportSize.width, initialViewportSize.height, false);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.08;
 
-const inputSize = createInputSize();
+const inputSize = createInputSize(initialViewportSize);
 const gridSize = createGridSize(inputSize.width, inputSize.height);
 const solver = new SmokeSolver({
   inputWidth: inputSize.width,
@@ -84,7 +95,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x05070d);
 scene.fog = new THREE.FogExp2(0x05070d, 0.062);
 
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(50, initialViewportSize.width / initialViewportSize.height, 0.1, 100);
 const cameraTarget = new THREE.Vector3(0, 4.2, 0);
 const spherical = { theta: 0.48, phi: 1.02, radius: 12.2 };
 
@@ -95,6 +106,13 @@ function updateCamera() {
     cameraTarget.z + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta),
   );
   camera.lookAt(cameraTarget);
+}
+
+function resizeViewport() {
+  const { width, height } = getViewportSize();
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height, false);
 }
 
 updateCamera();
@@ -592,6 +610,7 @@ const controls = new Controls({
 }, handleControl, {
   title: 'Volume Controls',
   accent: '#ffb56a',
+  anchor: viewport,
 });
 
 const looks = {
@@ -923,11 +942,7 @@ window.addEventListener('keydown', (event) => {
   if (event.key === 'r' || event.key === 'R') solver.reset();
 });
 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+window.addEventListener('resize', resizeViewport);
 
 function emit(x, y, depth, vx, vy) {
   solver.splat(x, y, vx, vy, mode, {

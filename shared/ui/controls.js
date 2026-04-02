@@ -7,30 +7,36 @@ export class Controls {
     this.values = {};
     this._controls = new Map();
     this._onChange = onChange;
-    this._defaultHelp = options.helpText || 'スライダーにマウスを合わせると、そのパラメータが見た目と挙動へ与える影響を表示します。';
+    this._defaultHelp = options.helpText
+      || 'スライダーにカーソルを重ねると、このパラメータがシミュレーションの見た目や挙動へ与える影響を表示します。';
     this._collapsed = false;
+    this._anchor = options.anchor || null;
+    this._layoutPadding = options.anchorPadding ?? 18;
+    this._topOffset = options.topOffset ?? 184;
+    this._rightOffset = options.rightOffset ?? 18;
+    this._minWidth = options.minWidth ?? 236;
 
     const panel = document.createElement('div');
     this.panel = panel;
 
     Object.assign(panel.style, {
       position: 'fixed',
-      top: '16px',
-      right: '16px',
-      minWidth: '220px',
-      maxWidth: 'min(280px, calc(100vw - 32px))',
-      maxHeight: 'calc(100vh - 32px)',
+      top: `${this._topOffset}px`,
+      right: `${this._rightOffset}px`,
+      minWidth: `${this._minWidth}px`,
+      maxWidth: 'min(300px, calc(100vw - 32px))',
+      maxHeight: `calc(100vh - ${this._topOffset + 18}px)`,
       overflowY: 'auto',
       overscrollBehavior: 'contain',
       scrollbarWidth: 'thin',
       padding: '14px 16px',
-      borderRadius: '16px',
-      border: '1px solid rgba(140, 170, 255, 0.18)',
-      background: 'rgba(9, 13, 24, 0.82)',
-      boxShadow: '0 18px 50px rgba(0, 0, 0, 0.28)',
-      backdropFilter: 'blur(18px)',
-      color: '#dbe7ff',
-      fontFamily: '"Aptos", "Segoe UI Variable Text", "Yu Gothic UI", sans-serif',
+      borderRadius: '18px',
+      border: '1px solid rgba(74, 143, 212, 0.18)',
+      background: 'rgba(255, 255, 255, 0.92)',
+      boxShadow: '0 14px 30px rgba(90, 74, 0, 0.16)',
+      backdropFilter: 'blur(16px)',
+      color: '#334155',
+      fontFamily: '"Segoe UI", "Hiragino Sans", sans-serif',
       fontSize: '12px',
       zIndex: '9999',
     });
@@ -47,9 +53,9 @@ export class Controls {
     const title = document.createElement('div');
     title.textContent = options.title || 'Controls';
     Object.assign(title.style, {
-      color: '#eef4ff',
+      color: options.accent || '#2e6fbf',
       fontSize: '11px',
-      fontWeight: '700',
+      fontWeight: '800',
       letterSpacing: '0.14em',
       textTransform: 'uppercase',
       flex: '1 1 auto',
@@ -60,16 +66,28 @@ export class Controls {
     toggle.type = 'button';
     toggle.textContent = 'Hide';
     Object.assign(toggle.style, {
-      border: '1px solid rgba(140, 170, 255, 0.18)',
-      background: 'rgba(17, 26, 44, 0.86)',
-      color: '#dbe7ff',
+      border: '1px solid rgba(74, 143, 212, 0.18)',
+      background: 'rgba(255, 248, 220, 0.96)',
+      color: '#2c2c2c',
       borderRadius: '999px',
       padding: '5px 10px',
       fontSize: '10px',
+      fontWeight: '700',
       letterSpacing: '0.08em',
       textTransform: 'uppercase',
       cursor: 'pointer',
       flex: '0 0 auto',
+      transition: 'background 0.18s ease, color 0.18s ease, transform 0.18s ease',
+    });
+    toggle.addEventListener('mouseenter', () => {
+      toggle.style.background = options.accent || '#4a8fd4';
+      toggle.style.color = '#ffffff';
+      toggle.style.transform = 'translateY(-1px)';
+    });
+    toggle.addEventListener('mouseleave', () => {
+      toggle.style.background = 'rgba(255, 248, 220, 0.96)';
+      toggle.style.color = '#2c2c2c';
+      toggle.style.transform = 'translateY(0)';
     });
     toggle.addEventListener('click', () => this.setCollapsed(!this._collapsed));
     this._toggle = toggle;
@@ -79,9 +97,7 @@ export class Controls {
 
     const body = document.createElement('div');
     this._body = body;
-    Object.assign(body.style, {
-      display: 'block',
-    });
+    body.style.display = 'block';
 
     const helpPanel = document.createElement('div');
     Object.assign(helpPanel.style, {
@@ -89,18 +105,18 @@ export class Controls {
       bottom: '-14px',
       marginTop: '14px',
       padding: '10px 12px',
-      borderRadius: '12px',
-      border: '1px solid rgba(140, 170, 255, 0.14)',
-      background: 'rgba(14, 20, 34, 0.92)',
-      boxShadow: '0 10px 24px rgba(0, 0, 0, 0.18)',
+      borderRadius: '14px',
+      border: '1px solid rgba(74, 143, 212, 0.14)',
+      background: 'rgba(255, 248, 220, 0.96)',
+      boxShadow: '0 10px 24px rgba(90, 74, 0, 0.12)',
     });
 
     const helpTitle = document.createElement('div');
     Object.assign(helpTitle.style, {
       marginBottom: '6px',
-      color: '#eef4ff',
+      color: options.accent || '#2e6fbf',
       fontSize: '10px',
-      fontWeight: '700',
+      fontWeight: '800',
       letterSpacing: '0.12em',
       textTransform: 'uppercase',
     });
@@ -108,7 +124,7 @@ export class Controls {
 
     const helpBody = document.createElement('div');
     Object.assign(helpBody.style, {
-      color: '#afbddf',
+      color: '#5b6475',
       lineHeight: '1.55',
       fontSize: '11px',
       whiteSpace: 'normal',
@@ -142,15 +158,15 @@ export class Controls {
         Object.assign(section.style, {
           margin: body.children.length ? '16px 0 10px' : '0 0 10px',
           paddingTop: body.children.length ? '12px' : '0',
-          borderTop: body.children.length ? '1px solid rgba(140, 170, 255, 0.12)' : 'none',
+          borderTop: body.children.length ? '1px solid rgba(240, 232, 192, 0.95)' : 'none',
         });
 
         const sectionLabel = document.createElement('div');
         sectionLabel.textContent = cfg.section;
         Object.assign(sectionLabel.style, {
-          color: '#eef4ff',
+          color: options.accent || '#2e6fbf',
           fontSize: '10px',
-          fontWeight: '700',
+          fontWeight: '800',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
         });
@@ -172,11 +188,12 @@ export class Controls {
 
       const nameEl = document.createElement('span');
       nameEl.textContent = cfg.label || key;
-      nameEl.style.color = '#b3c2e8';
+      nameEl.style.color = '#415166';
 
       const valueEl = document.createElement('span');
-      valueEl.style.color = '#8bc8ff';
+      valueEl.style.color = options.accent || '#4a8fd4';
       valueEl.style.fontVariantNumeric = 'tabular-nums';
+      valueEl.style.fontWeight = '700';
 
       label.appendChild(nameEl);
       label.appendChild(valueEl);
@@ -219,6 +236,11 @@ export class Controls {
     }
 
     document.body.appendChild(panel);
+
+    this._applyLayout = this._applyLayout.bind(this);
+    window.addEventListener('resize', this._applyLayout);
+    window.addEventListener('scroll', this._applyLayout, { passive: true });
+    this._applyLayout();
   }
 
   setValue(key, value, emit = false) {
@@ -240,9 +262,9 @@ export class Controls {
     this._collapsed = collapsed;
     this._body.style.display = collapsed ? 'none' : 'block';
     this.panel.style.overflowY = collapsed ? 'hidden' : 'auto';
-    this.panel.style.maxHeight = collapsed ? 'unset' : 'calc(100vh - 32px)';
-    this.panel.style.minWidth = collapsed ? 'auto' : '220px';
+    this.panel.style.minWidth = collapsed ? 'auto' : `${this._minWidth}px`;
     this._toggle.textContent = collapsed ? 'Show' : 'Hide';
+    this._applyLayout();
   }
 
   _formatValue(cfg, value) {
@@ -261,5 +283,27 @@ export class Controls {
   _clearHelp() {
     this._helpTitle.textContent = 'Parameter Help';
     this._helpBody.textContent = this._defaultHelp;
+  }
+
+  _applyLayout() {
+    let top = this._topOffset;
+    let right = this._rightOffset;
+    let availableHeight = window.innerHeight - top - this._layoutPadding;
+
+    if (this._anchor) {
+      const rect = this._anchor.getBoundingClientRect();
+      top = Math.max(this._layoutPadding, rect.top + this._layoutPadding);
+      right = Math.max(this._rightOffset, window.innerWidth - rect.right + this._layoutPadding);
+      availableHeight = Math.min(
+        window.innerHeight - top - this._layoutPadding,
+        rect.height - this._layoutPadding * 2,
+      );
+    }
+
+    availableHeight = Math.max(180, availableHeight);
+
+    this.panel.style.top = `${Math.round(top)}px`;
+    this.panel.style.right = `${Math.round(right)}px`;
+    this.panel.style.maxHeight = this._collapsed ? 'unset' : `${Math.round(availableHeight)}px`;
   }
 }

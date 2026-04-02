@@ -55,9 +55,20 @@ function copyColorToVector(color, vector) {
 }
 
 const canvas = document.getElementById('canvas');
+const viewport = document.getElementById('viewport');
+
+function getViewportSize() {
+  const rect = viewport.getBoundingClientRect();
+  return {
+    width: Math.max(360, Math.round(rect.width || window.innerWidth)),
+    height: Math.max(420, Math.round(rect.height || window.innerHeight)),
+  };
+}
+
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
+const initialViewportSize = getViewportSize();
+renderer.setSize(initialViewportSize.width, initialViewportSize.height, false);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.22;
 renderer.debug.onShaderError = (gl, program, vertexShader, fragmentShader) => {
@@ -68,7 +79,7 @@ renderer.debug.onShaderError = (gl, program, vertexShader, fragmentShader) => {
 };
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(60, initialViewportSize.width / initialViewportSize.height, 0.1, 1000);
 const cameraTarget = new THREE.Vector3(0, 0.2, 0);
 const spherical = { theta: 0.26, phi: 1.04, radius: 14 };
 
@@ -79,6 +90,13 @@ function updateCamera() {
     cameraTarget.z + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta),
   );
   camera.lookAt(cameraTarget);
+}
+
+function resizeViewport() {
+  const { width, height } = getViewportSize();
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height, false);
 }
 
 const BASE_BASIN_HALF_SIZE = new THREE.Vector2(6.2, 6.2);
@@ -966,8 +984,9 @@ controls = new Controls({
   },
 }, syncUniform, {
   title: 'Ocean Tuning',
-  accent: '#7ee0ff',
+  accent: '#4a8fd4',
   helpText: '各スライダーにカーソルを合わせると、その値がシミュレーションの見た目や挙動に与える影響を日本語で表示します。',
+  anchor: viewport,
 });
 
 Object.entries(controls.values).forEach(([key, value]) => syncUniform(key, value));
@@ -1149,11 +1168,7 @@ canvas.addEventListener('wheel', (event) => {
   updateCamera();
 }, { passive: false });
 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+window.addEventListener('resize', resizeViewport);
 
 document.querySelectorAll('[data-preset]').forEach((button) => {
   button.addEventListener('click', () => applyPreset(button.dataset.preset));

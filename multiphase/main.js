@@ -48,14 +48,14 @@ window.addEventListener('unhandledrejection', (event) => {
   showFatalError(reason);
 });
 
-function createSimSize(maxDim = 768) {
+function createSimSize(size, maxDim = 768) {
   const dpr = Math.min(window.devicePixelRatio || 1, 1.2);
-  const longest = Math.max(window.innerWidth, window.innerHeight);
+  const longest = Math.max(size.width, size.height);
   const scale = Math.min(1, maxDim / longest) * dpr;
 
   return {
-    width: Math.max(320, Math.round(window.innerWidth * scale)),
-    height: Math.max(320, Math.round(window.innerHeight * scale)),
+    width: Math.max(320, Math.round(size.width * scale)),
+    height: Math.max(320, Math.round(size.height * scale)),
   };
 }
 
@@ -64,15 +64,26 @@ function colorFromArray(values) {
 }
 
 const canvas = document.getElementById('canvas');
+const viewport = document.getElementById('viewport');
+
+function getViewportSize() {
+  const rect = viewport.getBoundingClientRect();
+  return {
+    width: Math.max(360, Math.round(rect.width || window.innerWidth)),
+    height: Math.max(420, Math.round(rect.height || window.innerHeight)),
+  };
+}
+
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
+const initialViewportSize = getViewportSize();
+renderer.setSize(initialViewportSize.width, initialViewportSize.height, false);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.08;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const simCanvas = document.createElement('canvas');
-const { width: W, height: H } = createSimSize();
+const { width: W, height: H } = createSimSize(initialViewportSize);
 simCanvas.width = W;
 simCanvas.height = H;
 
@@ -103,7 +114,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x05060b);
 scene.fog = new THREE.FogExp2(0x05060b, 0.055);
 
-const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(48, initialViewportSize.width / initialViewportSize.height, 0.1, 100);
 const cameraTarget = new THREE.Vector3(0, 1.45, 0);
 const spherical = { theta: 0.46, phi: 1.02, radius: 10.4 };
 let fluidUniforms = null;
@@ -116,6 +127,13 @@ function updateCamera() {
   );
   camera.lookAt(cameraTarget);
   fluidUniforms?.u_cameraPos.value.copy(camera.position);
+}
+
+function resizeViewport() {
+  const { width, height } = getViewportSize();
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height, false);
 }
 
 updateCamera();
@@ -725,6 +743,7 @@ const controls = new Controls({
   title: 'Ink Controls',
   accent: '#9ea8ff',
   helpText: 'スライダーへカーソルを重ねると、シミュレーションと見た目にどのような影響を与えるかを日本語で表示します。',
+  anchor: viewport,
 });
 
 const paletteRoot = document.getElementById('palette');
@@ -965,10 +984,6 @@ function loop() {
   stats.update();
 }
 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+window.addEventListener('resize', resizeViewport);
 
 loop();
