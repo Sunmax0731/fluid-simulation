@@ -17,6 +17,7 @@ export class Controls {
     this._minWidth = options.minWidth ?? 236;
     this._mount = options.mount || null;
     this._embedded = Boolean(this._mount);
+    this._activeHelpAnchor = null;
 
     const panel = document.createElement('div');
     this.panel = panel;
@@ -123,14 +124,18 @@ export class Controls {
 
     const helpPanel = document.createElement('div');
     Object.assign(helpPanel.style, {
-      position: 'sticky',
-      bottom: '-14px',
-      marginTop: '14px',
+      position: 'fixed',
+      left: '0',
+      top: '0',
+      display: 'none',
+      maxWidth: '280px',
       padding: '10px 12px',
       borderRadius: '14px',
       border: '1px solid rgba(64, 160, 224, 0.14)',
       background: 'rgba(18, 18, 42, 0.96)',
       boxShadow: '0 10px 24px rgba(0, 0, 0, 0.24)',
+      pointerEvents: 'none',
+      zIndex: '10000',
     });
 
     const helpTitle = document.createElement('div');
@@ -155,6 +160,7 @@ export class Controls {
 
     helpPanel.appendChild(helpTitle);
     helpPanel.appendChild(helpBody);
+    this._helpPanel = helpPanel;
     this._helpTitle = helpTitle;
     this._helpBody = helpBody;
 
@@ -233,11 +239,11 @@ export class Controls {
         this.setValue(key, parseFloat(input.value), true);
       });
 
-      row.addEventListener('mouseenter', () => this._setHelp(cfg));
+      row.addEventListener('mouseenter', () => this._setHelp(cfg, row));
       row.addEventListener('mouseleave', () => {
         if (document.activeElement !== input) this._clearHelp();
       });
-      input.addEventListener('focus', () => this._setHelp(cfg));
+      input.addEventListener('focus', () => this._setHelp(cfg, row));
       input.addEventListener('blur', () => {
         this._clearHelp();
       });
@@ -250,8 +256,8 @@ export class Controls {
       this.setValue(key, cfg.value, false);
     }
 
-    body.appendChild(helpPanel);
     panel.appendChild(body);
+    document.body.appendChild(helpPanel);
 
     if (options.collapsible === false) {
       toggle.style.display = 'none';
@@ -266,6 +272,11 @@ export class Controls {
       window.addEventListener('scroll', this._applyLayout, { passive: true });
       this._applyLayout();
     }
+
+    this._repositionHelp = this._repositionHelp.bind(this);
+    panel.addEventListener('scroll', this._repositionHelp, { passive: true });
+    window.addEventListener('resize', this._repositionHelp);
+    window.addEventListener('scroll', this._repositionHelp, { passive: true });
   }
 
   setValue(key, value, emit = false) {
@@ -289,6 +300,7 @@ export class Controls {
     this.panel.style.overflowY = collapsed ? 'hidden' : 'auto';
     this.panel.style.minWidth = collapsed ? 'auto' : `${this._minWidth}px`;
     this._toggle.textContent = collapsed ? 'Show' : 'Hide';
+    if (collapsed) this._clearHelp();
     if (!this._embedded) this._applyLayout();
   }
 
@@ -300,14 +312,55 @@ export class Controls {
     return value.toFixed(Math.min(decimals, 3));
   }
 
-  _setHelp(cfg) {
+  _setHelp(cfg, anchor) {
+    this._activeHelpAnchor = anchor || null;
     this._helpTitle.textContent = cfg.label || 'Parameter Help';
     this._helpBody.textContent = cfg.description || this._defaultHelp;
+    this._helpPanel.style.display = 'block';
+    this._repositionHelp();
   }
 
   _clearHelp() {
-    this._helpTitle.textContent = 'Parameter Help';
-    this._helpBody.textContent = this._defaultHelp;
+    this._activeHelpAnchor = null;
+    this._helpPanel.style.display = 'none';
+  }
+
+  _repositionHelp() {
+    if (!this._activeHelpAnchor || this._helpPanel.style.display === 'none') return;
+
+    const anchorRect = this._activeHelpAnchor.getBoundingClientRect();
+    if (anchorRect.width === 0 && anchorRect.height === 0) {
+      this._clearHelp();
+      return;
+    }
+
+    const gap = 12;
+    const viewportPadding = 12;
+
+    this._helpPanel.style.left = '0px';
+    this._helpPanel.style.top = '0px';
+
+    const helpRect = this._helpPanel.getBoundingClientRect();
+
+    let left = anchorRect.left - helpRect.width - gap;
+    if (left < viewportPadding) {
+      left = anchorRect.right + gap;
+    }
+    if (left + helpRect.width > window.innerWidth - viewportPadding) {
+      left = Math.max(
+        viewportPadding,
+        Math.min(anchorRect.left, window.innerWidth - helpRect.width - viewportPadding),
+      );
+    }
+
+    let top = anchorRect.top + (anchorRect.height - helpRect.height) * 0.5;
+    top = Math.max(
+      viewportPadding,
+      Math.min(top, window.innerHeight - helpRect.height - viewportPadding),
+    );
+
+    this._helpPanel.style.left = `${Math.round(left)}px`;
+    this._helpPanel.style.top = `${Math.round(top)}px`;
   }
 
   _applyLayout() {
